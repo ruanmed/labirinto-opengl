@@ -18,12 +18,13 @@
 #ifdef _WIN32
     #include <windows.h>
 #endif
-
 using Random = effolkronium::random_static;
 typedef struct
 {
-	int a;
-	int b;
+	int xA;
+	int xB;
+	int yA;
+	int yB;
 }vertex;
 
 int x,y;
@@ -37,9 +38,9 @@ bool isOnMap(int x,int y)
 }
 void generateRandomMaze(int initialCenterX,int initialCenterY)
 {
-	int currentLimitXp=initialCenterX+0.75*raio,currentLimitYp=initialCenterY+0.75*raio;
-	int currentLimitXl=initialCenterX-0.75*raio,currentLimitYl=initialCenterY-0.75*raio;
-	int curretStep=-1,stepCounter=0;
+	int currentLimitXp=initialCenterX+1.5*raio,currentLimitYp=initialCenterY;
+	int currentLimitXl=initialCenterX-1.5*raio,currentLimitYl=initialCenterY;
+	int currentStep=0,stepCounter=0;
 	std::vector< int > possibleSteps;
 
 	while(stepCounter > 100 )
@@ -50,20 +51,14 @@ void generateRandomMaze(int initialCenterX,int initialCenterY)
 
 		if(isOnMap(currentLimitYp+raio,currentLimitYl+raio))
 			possibleSteps.push_back(1);//labirinto vai pra cima
-		if(isOnMap(currentLimitYp-raio,currentLimitYl-raio))
-			possibleSteps.push_back(2);//labirinto vai pra baixo
-		if(isOnMap(currentLimitYp+raio/2,currentLimitYl+raio/2) &&
-			 isOnMap(currentLimitXp+raio/2,currentLimitXl+raio/2) )
-			possibleSteps.push_back(3);//labirinto vai pra cima e para a direita
-		if(isOnMap(currentLimitYp+raio/2,currentLimitYl+raio/2) &&
-			 isOnMap(currentLimitXp-raio/2,currentLimitXl-raio/2) )
-			possibleSteps.push_back(4);//labirinto vai pra cima e para a esquerda
-		if(isOnMap(currentLimitYp-raio/2,currentLimitYl-raio/2) &&
-			 isOnMap(currentLimitXp+raio/2,currentLimitXl+raio/2) )
-			possibleSteps.push_back(5);//labirinto vai pra baixo e para a direita
-		if(isOnMap(currentLimitYp-raio/2,currentLimitYl-raio/2) &&
-			 isOnMap(currentLimitXp-raio/2,currentLimitXl-raio/2) )
-			possibleSteps.push_back(6);//labirinto vai pra baixo e para a esquerda
+		if(isOnMap(currentLimitYl+((currentStep)*1.5*raio),currentLimitXl) &&
+			 isOnMap(currentLimitYl+1.5*raio,currentLimitXl+1.5*raio) )
+			possibleSteps.push_back(2);//labirinto vai  para a direita
+		if(isOnMap(currentLimitYp+1.5*raio,currentLimitXp) &&
+			 isOnMap(currentLimitYp+1.5*raio,currentLimitXp-1.5*raio) )
+			possibleSteps.push_back(3);//labirinto vai para a esquerda
+
+
 
 
 		if(!possibleSteps.size())
@@ -72,12 +67,49 @@ void generateRandomMaze(int initialCenterX,int initialCenterY)
 		int maxLimit = possibleSteps.size()-1;
 
 		auto val = Random::get(0,maxLimit);
+		int mov = possibleSteps[val];
+
+		switch(mov)
+		{
+			case 1:
+			{	currentStep = 1;
+				vertex *a = new vertex;
+				a->xA = currentLimitXp;
+				a->yA = currentLimitYp;
+				a->xB = currentLimitXp;
+				a->yB = currentLimitYp+raio;
+				currentLimitYp = currentLimitYp+raio;
+				maze.push_back(a);
+				vertex *b = new vertex;
+				b->xA = currentLimitXl;
+				b->yA = currentLimitYl;
+				b->xB = currentLimitXl;
+				b->yB = currentLimitYl+raio;
+				currentLimitYl=currentLimitYl+raio;
+				maze.push_back(b);
+			}
+			break;
+			case 2:
+			{
+				vertex *a = new vertex;
+				a->xA = currentLimitXp;
+				a->yA = currentLimitYp;
+				a->xB = currentLimitXp;
+				a->yB = currentLimitYp+raio*1.5;
+				maze.push_back(a);
+				vertex *b = new vertex;
+				b->xA = currentLimitXp;
+				b->yA = currentLimitYp+raio*1.5;
+				b->xB = currentLimitXp+raio*1.5;
+				b->yB = currentLimitYp+raio*1.5;
+				maze.push_back(b);
+			}
+		}
 	}
 }
 
 void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter parametros ou eu não sei como...
 {
-
 	double theta;
 
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -116,14 +148,12 @@ void Inicializa (void)
         glLoadIdentity();
         gluOrtho2D(-1000,1000,-1000,1000);
         glMatrixMode(GL_MODELVIEW);
-
 }
 
 // Programa principal
 
 int main(int argc, char** argv)
 {
-
 	char str[50];
 	glutInit(&argc,argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
