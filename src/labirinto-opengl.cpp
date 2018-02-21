@@ -9,6 +9,20 @@
 // 	Trabalho de Computação Gráfica
 // 		para compilar no linux: g++ labirinto-opengl.c -lglut -lGL -lGLU -lm
 //============================================================================
+/*
+	O objetivo é passar um objeto (circulo, triângulo ou retângulo) sem tocar nas paredes
+	do labirinto. Cada vez que ocorrer um toque na parede, o objeto volta para o início e o
+	jogador perde uma “vida”. O jogo acaba quando ele atravessar sem tocar (vitória) ou
+	bate 4 vezes em uma parede (derrota).
+	Outras características:
+	1 - O objeto deve estar preenchido com uma cor de escolha da dupla;
+	2 - A largura do labirinto deve ser 1,5 vezes (aproximadamente) o tamanho do objeto;
+	3 - Utilizar as setas do teclado para movimento do objeto no labirinto.
+	4 – O botão esquerdo do mouse deve ser usado para mudar as cores da janela, do
+	labirinto e do objeto.
+	5 - Outros requisitos para o funcionamento do jogo (dimensões, cores, formato do
+	labirinto etc..) podem ser definidos pela dupla.
+ */
 
 #include <GL/glut.h>
 #include <stdio.h>
@@ -19,7 +33,7 @@
     #include <windows.h>
 #endif
 
-#define RAIO 500
+#define CIRCLE_RADIUS 100
 #define ORTHO_WIDTH 1920
 #define ORTHO_HEIGTH 1080
 #define WINDOW_PROPORTION 0.5
@@ -36,14 +50,14 @@ typedef struct
 }vertex;
 
 int x,y;
-int xc = 0, yc = 0,raio = RAIO;
+int xc = 0, yc = 0,raio = CIRCLE_RADIUS;
 double r,g,b;
 
 
 std::vector< vertex* > maze;
 bool isOnMap(int x,int y)
 {
-	return (-900 <= x && x <= 900) && (-900 <= y && y <= 900);
+	return (-(ORTHO_WIDTH/2)*0.9 <= x && x <= (ORTHO_WIDTH/2)*0.9) && (-(ORTHO_HEIGTH/2)*0.9 <= y && y <= (ORTHO_HEIGTH/2)*0.9);
 }
 void generateRandomMaze(int initialCenterX,int initialCenterY)
 {
@@ -66,8 +80,6 @@ void generateRandomMaze(int initialCenterX,int initialCenterY)
 		if(isOnMap(currentLimitYp+1.5*raio,currentLimitXp) &&
 			 isOnMap(currentLimitYp+1.5*raio,currentLimitXp-1.5*raio) )
 			possibleSteps.push_back(3);//labirinto vai para a esquerda
-
-
 
 
 		if(!possibleSteps.size())
@@ -148,11 +160,41 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 		}
 	//	raio -= 4;
    // }
-    //raio = RAIO;
+    //raio = CIRCLE_RADIUS;
 
     	glEnd();
 	glutSwapBuffers();
 }
+
+//==== The Mouse Clicks Function =======================================//
+void myMouseFunc(int button, int state, int x, int y){
+
+
+}
+//======================================================================//
+void myMotionFunc(int x, int y){
+
+
+}
+
+//======================================================================//
+void myKeyboardFunc(unsigned char key, int x, int y) {
+	switch (key) {
+		case 27:
+			exit(0);
+	}
+}
+//======================================================================//
+void myDisplayFunc(){
+
+}
+//======================================================================//
+void myReshapeFunc(int w, int h){
+
+
+}
+
+//======================================================================//
 
 // Inicializa parâmetros de rendering
 void Inicializa (void)
@@ -177,7 +219,17 @@ int main(int argc, char** argv)
  	glutInitWindowSize(WINDOW_WIDTH,WINDOW_HEIGTH);
 	glutInitWindowPosition(10,10);
 	glutCreateWindow(str);
+
 	glutDisplayFunc(desenhaCirculo);
+
+	glutDisplayFunc ( myDisplayFunc  );
+	glutMouseFunc   ( myMouseFunc    );
+	glutMotionFunc  ( myMotionFunc   );
+	glutKeyboardFunc( myKeyboardFunc );
+	glutReshapeFunc ( myReshapeFunc  );
+
 	Inicializa();
 	glutMainLoop();
+
+	return 0;
 }
