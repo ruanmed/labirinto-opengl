@@ -7,7 +7,7 @@
 //  Universidade Federal do Vale do São Francisco
 // 	Professor Jorge Luis Cavalcanti
 // 	Trabalho de Computação Gráfica
-// 		para compilar: g++ AtividadeCG5.c -lglut -lGL -lGLU -lm
+// 		para compilar no linux: g++ labirinto-opengl.c -lglut -lGL -lGLU -lm
 //============================================================================
 
 #include <GL/glut.h>
@@ -18,6 +18,14 @@
 #ifdef _WIN32
     #include <windows.h>
 #endif
+
+#define RAIO 500
+#define ORTHO_WIDTH 1920
+#define ORTHO_HEIGTH 1080
+#define WINDOW_PROPORTION 0.5
+#define WINDOW_WIDTH (ORTHO_WIDTH*WINDOW_PROPORTION)
+#define WINDOW_HEIGTH (ORTHO_HEIGTH*WINDOW_PROPORTION)
+
 using Random = effolkronium::random_static;
 typedef struct
 {
@@ -28,8 +36,9 @@ typedef struct
 }vertex;
 
 int x,y;
-int xc,yc,raio;
+int xc = 0, yc = 0,raio = RAIO;
 double r,g,b;
+
 
 std::vector< vertex* > maze;
 bool isOnMap(int x,int y)
@@ -119,22 +128,27 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 	glPointSize(2.0f); // aumenta o tamanho dos pontos
     	glBegin(GL_POINTS);
 
-	for(theta = 0; theta <0.8;theta+=0.01)
-	{
+   // while(raio>0) {
 
-		x = (int)(raio*cos(theta));
-		y = (int)(raio*sin(theta));
+		for(theta = 0; theta <0.8;theta+=0.01)
+		{
 
+			x = (int)(raio*cos(theta));
+			y = (int)(raio*sin(theta));
 
-		glVertex2f(xc+(x),yc+(y));
-		glVertex2f(xc+(-x),yc+(y));
-		glVertex2f(xc+(-x),yc+(-y));
-		glVertex2f(xc+(x),yc+(-y));
-		glVertex2f(xc+(y),yc+(x));
-		glVertex2f(xc+(-y),yc+(x));
-		glVertex2f(xc+(-y),yc+(-x));
-		glVertex2f(xc+(y),yc+(-x));
-	}
+			glVertex2f(xc+(x),yc+(y));
+			glVertex2f(xc+(-x),yc+(y));
+			glVertex2f(xc+(-x),yc+(-y));
+			glVertex2f(xc+(x),yc+(-y));
+			glVertex2f(xc+(y),yc+(x));
+			glVertex2f(xc+(-y),yc+(x));
+			glVertex2f(xc+(-y),yc+(-x));
+			glVertex2f(xc+(y),yc+(-x));
+
+		}
+	//	raio -= 4;
+   // }
+    //raio = RAIO;
 
     	glEnd();
 	glutSwapBuffers();
@@ -143,11 +157,13 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 // Inicializa parâmetros de rendering
 void Inicializa (void)
 {
-        glClearColor(fabs(1-r), fabs(1-g), fabs(1-b), 0.0f);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluOrtho2D(-1000,1000,-1000,1000);
-        glMatrixMode(GL_MODELVIEW);
+	r = g = b = 1;
+
+	glClearColor(fabs(1-r), fabs(1-g), fabs(1-b), 0.0f);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-(ORTHO_WIDTH/2),(ORTHO_WIDTH/2),-(ORTHO_HEIGTH/2),(ORTHO_HEIGTH/2));
+	glMatrixMode(GL_MODELVIEW);
 }
 
 // Programa principal
@@ -156,9 +172,10 @@ int main(int argc, char** argv)
 {
 	char str[50];
 	glutInit(&argc,argv);
+
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
- 	glutInitWindowSize(800,800);
-	glutInitWindowPosition(800,800);
+ 	glutInitWindowSize(WINDOW_WIDTH,WINDOW_HEIGTH);
+	glutInitWindowPosition(10,10);
 	glutCreateWindow(str);
 	glutDisplayFunc(desenhaCirculo);
 	Inicializa();
