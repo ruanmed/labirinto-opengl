@@ -11,16 +11,18 @@
 //============================================================================
 /*
 [ ]	O objetivo é passar um objeto (circulo, triângulo ou retângulo) sem tocar nas paredes
-	do labirinto. Cada vez que ocorrer um toque na parede, o objeto volta para o início e o
-	jogador perde uma “vida”. O jogo acaba quando ele atravessar sem tocar (vitória) ou
-	bate 4 vezes em uma parede (derrota).
+	do labirinto.
+[x]	Cada vez que ocorrer um toque na parede, o objeto volta para o início e o
+	jogador perde uma “vida”.
+[ ]	O jogo acaba quando ele atravessar sem tocar (vitória) ou bate 4 vezes em uma
+	parede (derrota).
 	Outras características:
-	1 - O objeto deve estar preenchido com uma cor de escolha da dupla;
-	2 - A largura do labirinto deve ser 1,5 vezes (aproximadamente) o tamanho do objeto;
-	3 - Utilizar as setas do teclado para movimento do objeto no labirinto.
-	4 – O botão esquerdo do mouse deve ser usado para mudar as cores da janela, do
+[x]	1 - O objeto deve estar preenchido com uma cor de escolha da dupla;
+[x]	2 - A largura do labirinto deve ser 1,5 vezes (aproximadamente) o tamanho do objeto;
+[x]	3 - Utilizar as setas do teclado para movimento do objeto no labirinto.
+[x]	4 – O botão esquerdo do mouse deve ser usado para mudar as cores da janela, do
 	labirinto e do objeto.
-	5 - Outros requisitos para o funcionamento do jogo (dimensões, cores, formato do
+[x]	5 - Outros requisitos para o funcionamento do jogo (dimensões, cores, formato do
 	labirinto etc..) podem ser definidos pela dupla.
  */
 
@@ -88,19 +90,47 @@ bool isOnMaze(int x,int y)
 //
 	GLubyte *data = (GLubyte *) malloc( 3 * 1 * 1);
 	if( data ) {
-		glReadPixels(xSRD, glutGet( GLUT_WINDOW_HEIGHT ) -ySRD, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glReadPixels(xSRD, glutGet( GLUT_WINDOW_HEIGHT ) -  ySRD, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+		printf("SRD( %d, %d)\n", xSRD, glutGet( GLUT_WINDOW_HEIGHT ) -ySRD);
+		printf("MAZE - rgb( %d, %d, %d)\nRGB( %d, %d, %d)\n",
+				data[0], data[1], data[2],
+					(int) (corLabiR*255.0), (int)(corLabiG*255.0), (int)(corLabiB*255.0));
+		if (	ceil(data[0]/25.5f) == ceil(corLabiR*10) &&
+				ceil(data[1]/25.5f) == ceil(corLabiG*10) &&
+				ceil(data[2]/25.5f) == ceil(corLabiB*10)
+				){
+
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
-	printf("SRD( %d, %d)\n", xSRD, ySRD);
-	//printf("MAZErgb( %d, %d, %d) - rgb.f( %f, %f, %f)\nRGB( %d, %d, %d) -  RGB.f( %f, %f, %f)\n",
-	//			data[0], data[1], data[2], data[0]/255.0f, data[1]/255.0f, data[2]/255.0f,
-		//		(int) corLabiR*255, (int)corLabiG*255, (int)corLabiB*255, corLabiR, corLabiG, corLabiB);
-	if (	ceil(data[0]/25.5f) == ceil(corLabiR*10) &&
-			ceil(data[1]/25.5f) == ceil(corLabiG*10) &&
-			ceil(data[2]/25.5f) == ceil(corLabiB*10)
-			)
-		return true;
-	else
+	else {
+		printf("ERROR - Can't allocated memory.\n");
 		return false;
+	}
+}
+void verificarColisao(){
+	double theta;
+	printf("ENTROU\n");
+	for(theta = 0; theta <0.8;theta+=0.01) {
+		x = (int)(raio*cos(theta));
+		y = (int)(raio*sin(theta));
+
+		if (	isOnMaze(xc+(x),yc+(y)) ||
+				isOnMaze(xc+(-x),yc+(y)) ||
+				isOnMaze(xc+(-x),yc+(-y)) ||
+				isOnMaze(xc+(x),yc+(-y)) ||
+				isOnMaze(xc+(y),yc+(x)) ||
+				isOnMaze(xc+(-y),yc+(x)) ||
+				isOnMaze(xc+(-y),yc+(-x)) ||
+				isOnMaze(xc+(y),yc+(-x))
+				)
+			retornarInicio();
+	}
+	//raio = CIRCLE_RADIUS;
 }
 void generateRandomMaze()
 {
@@ -160,19 +190,6 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 				{
 					x = (int)(raio*cos(theta));
 					y = (int)(raio*sin(theta));
-					if (raio == CIRCLE_RADIUS) {
-						if (	isOnMaze(xc+(x),yc+(y)) ||
-								isOnMaze(xc+(-x),yc+(y)) ||
-								isOnMaze(xc+(-x),yc+(-y)) ||
-								isOnMaze(xc+(x),yc+(-y)) ||
-								isOnMaze(xc+(y),yc+(x)) ||
-								isOnMaze(xc+(-y),yc+(x)) ||
-								isOnMaze(xc+(-y),yc+(-x)) ||
-								isOnMaze(xc+(y),yc+(-x))
-								) {
-							retornarInicio();
-						}
-					}
 					glVertex2f(xc+(x),yc+(y));
 					glVertex2f(xc+(-x),yc+(y));
 					glVertex2f(xc+(-x),yc+(-y));
@@ -228,10 +245,10 @@ void myMouseFunc(int button, int state, int x, int y){
 		default:
 			break;
 	}
-	printf("m(%d, %d) c(%d, %d) -- d %d -- SRU(%d, %d)\n", x, y, xc, yc, paramCirculo, xSRU, ySRU);
-	printf("rgb( %d, %d, %d) - rgb.f( %f, %f, %f)\nRGB( %d, %d, %d) -  RGB.f( %f, %f, %f)\n",
-			data[0], data[1], data[2], data[0]/255.0f, data[1]/255.0f, data[2]/255.0f,
-			(int) corLabiR*255, (int)corLabiG*255, (int)corLabiB*255, corLabiR, corLabiG, corLabiB);
+	//printf("m(%d, %d) c(%d, %d) -- d %d -- SRU(%d, %d)\n", x, y, xc, yc, paramCirculo, xSRU, ySRU);
+	//printf("rgb( %d, %d, %d) - rgb.f( %f, %f, %f)\nRGB( %d, %d, %d) -  RGB.f( %f, %f, %f)\n",
+	//		data[0], data[1], data[2], data[0]/255.0f, data[1]/255.0f, data[2]/255.0f,
+	//		(int) (corLabiR*255.0), (int)(corLabiG*255.0), (int)(corLabiB*255.0), corLabiR, corLabiG, corLabiB);
 	glutPostRedisplay();
 }
 //======================================================================//
@@ -266,15 +283,19 @@ void mySpecialFunc(int key, int x, int y){
 	switch (key) {
 		case GLUT_KEY_LEFT:
 			xc -= CIRCLE_CENTER_DISPLACEMENT;
+			verificarColisao();
 			break;
 		case GLUT_KEY_UP:
 			yc += CIRCLE_CENTER_DISPLACEMENT;
+			verificarColisao();
 			break;
 		case GLUT_KEY_RIGHT:
 			xc += CIRCLE_CENTER_DISPLACEMENT;
+			verificarColisao();
 			break;
 		case GLUT_KEY_DOWN:
 			yc -= CIRCLE_CENTER_DISPLACEMENT;
+			verificarColisao();
 			break;
 		default:
 			break;
@@ -286,6 +307,7 @@ void myDisplayFunc(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClearColor(corFundR, corFundG, corFundB, 0.0f);
 	desenhaLabirinto();
+	glutSwapBuffers();
 	desenhaCirculo();
 	glutSwapBuffers();
 	//glutPostRedisplay();
@@ -308,7 +330,7 @@ void Inicializa (void)
 {
 	corCircR = corCircG = corCircB = 1;
 	corFundR = corFundG = corFundB = fabs(1-corCircR);
-	corLabiR = corLabiG = corLabiB = 1;
+	corLabiR = corLabiG = corLabiB = 0.9;
 
 
 	SRD[X_MIN] = 0;
