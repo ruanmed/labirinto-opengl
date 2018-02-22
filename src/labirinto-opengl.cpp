@@ -179,17 +179,17 @@ void myMouseFunc(int button, int state, int x, int y){
 					ceil(data[1]/25.5f) == ceil(corLabiG*10) &&
 					ceil(data[2]/25.5f) == ceil(corLabiB*10)
 					) {
-				corLabiR = Random::get(0.0,1.0);
-				corLabiG = Random::get(0.0,1.0);
-				corLabiB = Random::get(0.0,1.0);
+				corLabiR = round(Random::get(0.0,255.0))/255.0;
+				corLabiG = round(Random::get(0.0,255.0))/255.0;
+				corLabiB = round(Random::get(0.0,255.0))/255.0;
 			}
 			else if (ceil(data[0]/25.5f) == ceil(corFundR*10) &&
 					ceil(data[1]/25.5f) == ceil(corFundG*10) &&
 					ceil(data[2]/25.5f) == ceil(corFundB*10)
 					) {
-				corFundR = Random::get(0.0,1.0);
-				corFundG = Random::get(0.0,1.0);
-				corFundB = Random::get(0.0,1.0);
+				corFundR = round(Random::get(0.0,255.0))/255.0;
+				corFundG = round(Random::get(0.0,255.0))/255.0;
+				corFundB = round(Random::get(0.0,255.0))/255.0;
 			}
 			break;
 		default:
