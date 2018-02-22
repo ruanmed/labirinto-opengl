@@ -282,8 +282,8 @@ void Inicializa (void)
 	glClearColor(corFundR, corFundG, corFundB, 0.0f);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(-(ORTHO_WIDTH/2)-50,(ORTHO_WIDTH/2)+50,-(ORTHO_HEIGTH/2)-50,(ORTHO_HEIGTH/2)+50);
-	//gluOrtho2D(-(ORTHO_WIDTH/2),(ORTHO_WIDTH/2),-(ORTHO_HEIGTH/2),(ORTHO_HEIGTH/2));
+	//gluOrtho2D(-(ORTHO_WIDTH/2)-50,(ORTHO_WIDTH/2)+50,-(ORTHO_HEIGTH/2)-50,(ORTHO_HEIGTH/2)+50);
+	gluOrtho2D(-(ORTHO_WIDTH/2),(ORTHO_WIDTH/2),-(ORTHO_HEIGTH/2),(ORTHO_HEIGTH/2));
 	glMatrixMode(GL_MODELVIEW);
 	generateRandomMaze();
 }
