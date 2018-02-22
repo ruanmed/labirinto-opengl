@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <effolkronium/random.hpp>
+#include <conversorSR.hpp>
 #include <vector>
 #ifdef _WIN32
     #include <windows.h>
@@ -55,7 +56,9 @@ int xc = 0, yc = 0,raio = CIRCLE_RADIUS;
 double corCircR,corCircG,corCircB;
 double corFundR,corFundG,corFundB;
 double corLabiR,corLabiG,corLabiB;
-
+//  SISTEMA = {Xmin,Xmax,Ymin,Ymax]
+int SRU[4] = {-(ORTHO_WIDTH/2),(ORTHO_WIDTH/2),-(ORTHO_HEIGTH/2),(ORTHO_HEIGTH/2)};
+int SRD[4] = {0,0,0,0};
 
 std::vector< vertex* > maze;
 bool isOnMap(int x,int y)
@@ -131,7 +134,9 @@ void generateRandomMaze(int initialCenterX,int initialCenterY)
 		}
 	}
 }
+//======================================================================//
 
+//======================================================================//
 void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter parametros ou eu não sei como...
 {
 	double theta;
@@ -176,11 +181,16 @@ void myMouseFunc(int button, int state, int x, int y){
 }
 //======================================================================//
 void myMotionFunc(int x, int y){
-
-	corCircR = Random::get(0.0,1.0);
-	corCircG = Random::get(0.0,1.0);
-	corCircB = Random::get(0.0,1.0);
-	printf("m(%d, %d) c(%d, %d)\n", x, y, xc, yc);
+	//y^2 + x^2 = r^2
+	int xSRU = getXSRU(SRU, SRD,x);
+	int ySRU = getYSRU(SRU, SRD,y);
+	int d = (sqrt((xSRU-xc)*(xSRU-xc)+(ySRU-yc)*(ySRU-yc)));
+	if (d <= raio) {
+		corCircR = Random::get(0.0,1.0);
+		corCircG = Random::get(0.0,1.0);
+		corCircB = Random::get(0.0,1.0);
+	}
+	printf("m(%d, %d) c(%d, %d) -- d %d -- SRU(%d, %d)\n", x, y, xc, yc, d, xSRU, ySRU);
 
 }
 
@@ -233,8 +243,9 @@ void myDisplayFunc(){
 }
 //======================================================================//
 void myReshapeFunc(int w, int h){
-
-
+	SRD[X_MAX] = w;
+	SRD[Y_MAX] = h;
+	printf("m(%d, %d)", w, h);
 }
 
 //======================================================================//
@@ -244,6 +255,11 @@ void Inicializa (void)
 {
 	corCircR = corCircG = corCircB = 1;
 	corFundR = corFundG = corFundB = fabs(1-corCircR);
+
+	SRD[X_MIN] = 0;
+	SRD[X_MAX] = WINDOW_WIDTH;
+	SRD[Y_MIN] = 0;
+	SRD[Y_MAX] = WINDOW_HEIGTH;
 
 	glClearColor(corFundR, corFundG, corFundB, 0.0f);
 	glMatrixMode(GL_PROJECTION);
