@@ -10,7 +10,7 @@
 // 		para compilar no linux: g++ labirinto-opengl.c -lglut -lGL -lGLU -lm
 //============================================================================
 /*
-	O objetivo é passar um objeto (circulo, triângulo ou retângulo) sem tocar nas paredes
+[ ]	O objetivo é passar um objeto (circulo, triângulo ou retângulo) sem tocar nas paredes
 	do labirinto. Cada vez que ocorrer um toque na parede, o objeto volta para o início e o
 	jogador perde uma “vida”. O jogo acaba quando ele atravessar sem tocar (vitória) ou
 	bate 4 vezes em uma parede (derrota).
@@ -60,7 +60,7 @@ typedef struct
 
 mesh maze[MESH_WIDTH_PARTS][MESH_HEIGTH_PARTS];
 int x,y;
-int xc = 0, yc = 0,raio = CIRCLE_RADIUS;
+int xc = 0, yc = 0, xc0 = 0, yc0 = 0, raio = CIRCLE_RADIUS;
 double corCircR,corCircG,corCircB;
 double corFundR,corFundG,corFundB;
 double corLabiR,corLabiG,corLabiB;
@@ -77,9 +77,30 @@ void resetMazeMesh()
 			maze[l][c].top = 0;
 		}
 }
-bool isOnMap(int x,int y)
+void retornarInicio() {	//	Retorna círculo para o início do labirinto
+	xc = xc0;
+	yc = yc0;
+}
+bool isOnMaze(int x,int y)
 {
-	return (-(ORTHO_WIDTH/2)*0.9 <= x && x <= (ORTHO_WIDTH/2)*0.9) && (-(ORTHO_HEIGTH/2)*0.9 <= y && y <= (ORTHO_HEIGTH/2)*0.9);
+	int xSRD = getXSRD(SRU, SRD, x);
+	int ySRD = getYSRD(SRU, SRD, y);
+//
+	GLubyte *data = (GLubyte *) malloc( 3 * 1 * 1);
+	if( data ) {
+		glReadPixels(xSRD, glutGet( GLUT_WINDOW_HEIGHT ) -ySRD, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, data);
+	}
+	printf("SRD( %d, %d)\n", xSRD, ySRD);
+	//printf("MAZErgb( %d, %d, %d) - rgb.f( %f, %f, %f)\nRGB( %d, %d, %d) -  RGB.f( %f, %f, %f)\n",
+	//			data[0], data[1], data[2], data[0]/255.0f, data[1]/255.0f, data[2]/255.0f,
+		//		(int) corLabiR*255, (int)corLabiG*255, (int)corLabiB*255, corLabiR, corLabiG, corLabiB);
+	if (	ceil(data[0]/25.5f) == ceil(corLabiR*10) &&
+			ceil(data[1]/25.5f) == ceil(corLabiG*10) &&
+			ceil(data[2]/25.5f) == ceil(corLabiB*10)
+			)
+		return true;
+	else
+		return false;
 }
 void generateRandomMaze()
 {
@@ -139,7 +160,19 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 				{
 					x = (int)(raio*cos(theta));
 					y = (int)(raio*sin(theta));
-
+					if (raio == CIRCLE_RADIUS) {
+						if (	isOnMaze(xc+(x),yc+(y)) ||
+								isOnMaze(xc+(-x),yc+(y)) ||
+								isOnMaze(xc+(-x),yc+(-y)) ||
+								isOnMaze(xc+(x),yc+(-y)) ||
+								isOnMaze(xc+(y),yc+(x)) ||
+								isOnMaze(xc+(-y),yc+(x)) ||
+								isOnMaze(xc+(-y),yc+(-x)) ||
+								isOnMaze(xc+(y),yc+(-x))
+								) {
+							retornarInicio();
+						}
+					}
 					glVertex2f(xc+(x),yc+(y));
 					glVertex2f(xc+(-x),yc+(y));
 					glVertex2f(xc+(-x),yc+(-y));
@@ -291,9 +324,10 @@ void Inicializa (void)
 	glMatrixMode(GL_MODELVIEW);
 	generateRandomMaze();
 	auto val = Random::get(-MESH_WIDTH_PARTS/2,MESH_WIDTH_PARTS/2);
-	yc = SRU[2]+3*CIRCLE_RADIUS;
-	xc = val*MAZE_STEP;
+	yc = yc0 = SRU[Y_MIN]+3*CIRCLE_RADIUS;
+	xc = xc0 = val*MAZE_STEP;
 }
+
 
 // Programa principal
 
