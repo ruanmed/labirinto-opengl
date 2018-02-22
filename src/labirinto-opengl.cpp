@@ -33,12 +33,13 @@
     #include <windows.h>
 #endif
 
-#define CIRCLE_RADIUS 100
+#define CIRCLE_RADIUS 10
 #define ORTHO_WIDTH 1920
 #define ORTHO_HEIGTH 1080
 #define WINDOW_PROPORTION 0.5
 #define WINDOW_WIDTH (ORTHO_WIDTH*WINDOW_PROPORTION)
 #define WINDOW_HEIGTH (ORTHO_HEIGTH*WINDOW_PROPORTION)
+#define MAZE_STEP CIRCLE_RADIUS*2
 
 using Random = effolkronium::random_static;
 typedef struct
@@ -140,7 +141,7 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 	glPointSize(2.0f); // aumenta o tamanho dos pontos
     	glBegin(GL_POINTS);
 
-   // while(raio>0) {
+   while(raio>0) {
 
 		for(theta = 0; theta <0.8;theta+=0.01)
 		{
@@ -158,9 +159,9 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 			glVertex2f(xc+(y),yc+(-x));
 
 		}
-	//	raio -= 4;
-   // }
-    //raio = CIRCLE_RADIUS;
+		raio -= 0.1;
+    }
+    raio = CIRCLE_RADIUS;
 
     	glEnd();
 	glutSwapBuffers();
@@ -182,7 +183,41 @@ void myKeyboardFunc(unsigned char key, int x, int y) {
 	switch (key) {
 		case 27:
 			exit(0);
+		case GLUT_KEY_LEFT:
+			xc--;
+			break;
+		case GLUT_KEY_UP:
+			yc++;
+			break;
+		case GLUT_KEY_RIGHT:
+			xc++;
+			break;
+		case GLUT_KEY_DOWN:
+			yc--;
+			break;
+		default:
+			break;
 	}
+	glutPostRedisplay();
+}
+void mySpecialFunc(int key, int x, int y){
+	switch (key) {
+		case GLUT_KEY_LEFT:
+			xc -= MAZE_STEP;
+			break;
+		case GLUT_KEY_UP:
+			yc += MAZE_STEP;
+			break;
+		case GLUT_KEY_RIGHT:
+			xc += MAZE_STEP;
+			break;
+		case GLUT_KEY_DOWN:
+			yc -= MAZE_STEP;
+			break;
+		default:
+			break;
+	}
+	glutPostRedisplay();
 }
 //======================================================================//
 void myDisplayFunc(){
@@ -222,11 +257,12 @@ int main(int argc, char** argv)
 
 	glutDisplayFunc(desenhaCirculo);
 
-	glutDisplayFunc ( myDisplayFunc  );
-	glutMouseFunc   ( myMouseFunc    );
-	glutMotionFunc  ( myMotionFunc   );
-	glutKeyboardFunc( myKeyboardFunc );
-	glutReshapeFunc ( myReshapeFunc  );
+	//glutDisplayFunc 	( myDisplayFunc	);
+	//glutMouseFunc   	( myMouseFunc   );
+	//glutMotionFunc  	( myMotionFunc  );
+	glutKeyboardFunc	( myKeyboardFunc);
+	glutSpecialFunc		( mySpecialFunc	);
+	//glutReshapeFunc ( myReshapeFunc  );
 
 	Inicializa();
 	glutMainLoop();
