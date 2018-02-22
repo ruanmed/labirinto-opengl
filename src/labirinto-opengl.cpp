@@ -40,16 +40,19 @@
 #define WINDOW_WIDTH (ORTHO_WIDTH*WINDOW_PROPORTION)
 #define WINDOW_HEIGTH (ORTHO_HEIGTH*WINDOW_PROPORTION)
 #define MAZE_STEP CIRCLE_RADIUS*2
+#define MESH_WIDTH_PARTS 128
+#define MESH_HEIGTH_PARTS 72
+#define MESH_WIDTH_PARTS_OPENNING_PROBABILITY 0.2
+#define MESH_HEIGHT_PARTS_OPENNING_PROBABILITY 0.5
 
 using Random = effolkronium::random_static;
 typedef struct
 {
-	int xA;
-	int xB;
-	int yA;
-	int yB;
-}vertex;
+	char side;
+	char top;
+}mesh;
 
+mesh maze[MESH_WIDTH_PARTS][MESH_HEIGTH_PARTS];
 int x,y;
 int xc = 0, yc = 0,raio = CIRCLE_RADIUS;
 double corCircR,corCircG,corCircB;
@@ -57,81 +60,37 @@ double corFundR,corFundG,corFundB;
 double corLabiR,corLabiG,corLabiB;
 
 
-std::vector< vertex* > maze;
+void resetMazeMesh()
+{
+	for(int l=0;l<MESH_WIDTH_PARTS;l++)
+		for(int c=0;c<MESH_HEIGTH_PARTS;c++)
+		{
+			maze[l][c].side = 0;
+			maze[l][c].top = 0;
+		}
+}
 bool isOnMap(int x,int y)
 {
 	return (-(ORTHO_WIDTH/2)*0.9 <= x && x <= (ORTHO_WIDTH/2)*0.9) && (-(ORTHO_HEIGTH/2)*0.9 <= y && y <= (ORTHO_HEIGTH/2)*0.9);
 }
 void generateRandomMaze(int initialCenterX,int initialCenterY)
 {
-	int currentLimitXp=initialCenterX+1.5*raio,currentLimitYp=initialCenterY;
-	int currentLimitXl=initialCenterX-1.5*raio,currentLimitYl=initialCenterY;
-	int currentStep=0,stepCounter=0;
-	std::vector< int > possibleSteps;
-
-	while(stepCounter > 100 )
-	{
-
-		while(possibleSteps.size() > 0)
-			possibleSteps.pop_back();
-
-		if(isOnMap(currentLimitYp+raio,currentLimitYl+raio))
-			possibleSteps.push_back(1);//labirinto vai pra cima
-		if(isOnMap(currentLimitYl+((currentStep)*1.5*raio),currentLimitXl) &&
-			 isOnMap(currentLimitYl+1.5*raio,currentLimitXl+1.5*raio) )
-			possibleSteps.push_back(2);//labirinto vai  para a direita
-		if(isOnMap(currentLimitYp+1.5*raio,currentLimitXp) &&
-			 isOnMap(currentLimitYp+1.5*raio,currentLimitXp-1.5*raio) )
-			possibleSteps.push_back(3);//labirinto vai para a esquerda
+	resetMazeMesh();
 
 
-		if(!possibleSteps.size())
-			break;
-
-		int maxLimit = possibleSteps.size()-1;
-
-		auto val = Random::get(0,maxLimit);
-		int mov = possibleSteps[val];
-
-		switch(mov)
-		{
-			case 1:
-			{	currentStep = 1;
-				vertex *a = new vertex;
-				a->xA = currentLimitXp;
-				a->yA = currentLimitYp;
-				a->xB = currentLimitXp;
-				a->yB = currentLimitYp+raio;
-				currentLimitYp = currentLimitYp+raio;
-				maze.push_back(a);
-				vertex *b = new vertex;
-				b->xA = currentLimitXl;
-				b->yA = currentLimitYl;
-				b->xB = currentLimitXl;
-				b->yB = currentLimitYl+raio;
-				currentLimitYl=currentLimitYl+raio;
-				maze.push_back(b);
-			}
-			break;
-			case 2:
+	for(int l=0;l<MESH_WIDTH_PARTS;l++)
+			for(int c=0;c<MESH_HEIGTH_PARTS;c++)
 			{
-				vertex *a = new vertex;
-				a->xA = currentLimitXp;
-				a->yA = currentLimitYp;
-				a->xB = currentLimitXp;
-				a->yB = currentLimitYp+raio*1.5;
-				maze.push_back(a);
-				vertex *b = new vertex;
-				b->xA = currentLimitXp;
-				b->yA = currentLimitYp+raio*1.5;
-				b->xB = currentLimitXp+raio*1.5;
-				b->yB = currentLimitYp+raio*1.5;
-				maze.push_back(b);
+				if(auto val = Random::get<bool>(MESH_WIDTH_PARTS_OPENNING_PROBABILITY))
+					maze[l][c].side = 1;
+				if(auto val = Random::get<bool>(MESH_HEIGHT_PARTS_OPENNING_PROBABILITY))
+					maze[l][c].top = 1;
 			}
-		}
-	}
 }
+void desenhaLabirinto(void)
+{
 
+}
 void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter parametros ou eu não sei como...
 {
 	double theta;
