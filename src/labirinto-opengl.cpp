@@ -36,6 +36,8 @@
 
 #define CIRCLE_RADIUS 15
 #define CIRCLE_POINT_SIZE 2.0f
+#define CIRCLE_CENTER_SPEED (1/4.0)
+#define CIRCLE_CENTER_DISPLACEMENT CIRCLE_CENTER_SPEED*MAZE_STEP
 #define ORTHO_WIDTH 1920
 #define ORTHO_HEIGTH 1080
 #define WINDOW_PROPORTION 0.5
@@ -47,6 +49,7 @@
 #define MESH_HEIGTH_PARTS ORTHO_HEIGTH/MAZE_STEP
 #define MESH_WIDTH_PARTS_OPENNING_PROBABILITY 0.5
 #define MESH_HEIGHT_PARTS_OPENNING_PROBABILITY 0.7
+
 
 using Random = effolkronium::random_static;
 typedef struct
@@ -229,16 +232,16 @@ void myKeyboardFunc(unsigned char key, int x, int y) {
 void mySpecialFunc(int key, int x, int y){
 	switch (key) {
 		case GLUT_KEY_LEFT:
-			xc -= MAZE_STEP;
+			xc -= CIRCLE_CENTER_DISPLACEMENT;
 			break;
 		case GLUT_KEY_UP:
-			yc += MAZE_STEP;
+			yc += CIRCLE_CENTER_DISPLACEMENT;
 			break;
 		case GLUT_KEY_RIGHT:
-			xc += MAZE_STEP;
+			xc += CIRCLE_CENTER_DISPLACEMENT;
 			break;
 		case GLUT_KEY_DOWN:
-			yc -= MAZE_STEP;
+			yc -= CIRCLE_CENTER_DISPLACEMENT;
 			break;
 		default:
 			break;
@@ -292,7 +295,7 @@ void Inicializa (void)
 
 int main(int argc, char** argv)
 {
-	char str[50];
+	char str[50] = "Wastedlands Maze by Ricardo e Ruan Medeiros";
 	glutInit(&argc,argv);
 
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
