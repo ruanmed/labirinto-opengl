@@ -295,7 +295,7 @@ void Inicializa (void)
 
 int main(int argc, char** argv)
 {
-	char str[50] = "Wastedlands Maze by Ricardo e Ruan Medeiros";
+	char str[50] = "Wastelands Maze by Ricardo e Ruan Medeiros";
 	glutInit(&argc,argv);
 
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
