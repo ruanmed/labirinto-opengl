@@ -47,7 +47,7 @@
 #define MAZE_LINE_SIZE 6.0f
 #define MESH_WIDTH_PARTS ORTHO_WIDTH/MAZE_STEP
 #define MESH_HEIGTH_PARTS ORTHO_HEIGTH/MAZE_STEP
-#define MESH_WIDTH_PARTS_OPENNING_PROBABILITY 0.5
+#define MESH_WIDTH_PARTS_OPENNING_PROBABILITY 0.6
 #define MESH_HEIGHT_PARTS_OPENNING_PROBABILITY 0.7
 
 
@@ -277,6 +277,7 @@ void Inicializa (void)
 	corFundR = corFundG = corFundB = fabs(1-corCircR);
 	corLabiR = corLabiG = corLabiB = 1;
 
+
 	SRD[X_MIN] = 0;
 	SRD[X_MAX] = WINDOW_WIDTH;
 	SRD[Y_MIN] = 0;
@@ -289,6 +290,9 @@ void Inicializa (void)
 	gluOrtho2D(-(ORTHO_WIDTH/2),(ORTHO_WIDTH/2),-(ORTHO_HEIGTH/2),(ORTHO_HEIGTH/2));
 	glMatrixMode(GL_MODELVIEW);
 	generateRandomMaze();
+	auto val = Random::get(-MESH_WIDTH_PARTS/2,MESH_WIDTH_PARTS/2);
+	yc = SRU[2]+3*CIRCLE_RADIUS;
+	xc = val*MAZE_STEP;
 }
 
 // Programa principal
