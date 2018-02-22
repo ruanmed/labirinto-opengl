@@ -52,7 +52,9 @@ typedef struct
 
 int x,y;
 int xc = 0, yc = 0,raio = CIRCLE_RADIUS;
-double r,g,b;
+double corCircR,corCircG,corCircB;
+double corFundR,corFundG,corFundB;
+double corLabiR,corLabiG,corLabiB;
 
 
 std::vector< vertex* > maze;
@@ -136,7 +138,7 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glColor3f(r, g, b); // vermelho
+	glColor3f(corCircR, corCircG, corCircB);
 
 	glPointSize(2.0f); // aumenta o tamanho dos pontos
     	glBegin(GL_POINTS);
@@ -175,6 +177,10 @@ void myMouseFunc(int button, int state, int x, int y){
 //======================================================================//
 void myMotionFunc(int x, int y){
 
+	corCircR = Random::get(0.0,1.0);
+	corCircG = Random::get(0.0,1.0);
+	corCircB = Random::get(0.0,1.0);
+	printf("m(%d, %d) c(%d, %d)\n", x, y, xc, yc);
 
 }
 
@@ -200,6 +206,7 @@ void myKeyboardFunc(unsigned char key, int x, int y) {
 	}
 	glutPostRedisplay();
 }
+//======================================================================//
 void mySpecialFunc(int key, int x, int y){
 	switch (key) {
 		case GLUT_KEY_LEFT:
@@ -221,7 +228,8 @@ void mySpecialFunc(int key, int x, int y){
 }
 //======================================================================//
 void myDisplayFunc(){
-
+	glClearColor(corFundR, corFundG, corFundB, 0.0f);
+	desenhaCirculo();
 }
 //======================================================================//
 void myReshapeFunc(int w, int h){
@@ -234,9 +242,10 @@ void myReshapeFunc(int w, int h){
 // Inicializa parâmetros de rendering
 void Inicializa (void)
 {
-	r = g = b = 1;
+	corCircR = corCircG = corCircB = 1;
+	corFundR = corFundG = corFundB = fabs(1-corCircR);
 
-	glClearColor(fabs(1-r), fabs(1-g), fabs(1-b), 0.0f);
+	glClearColor(corFundR, corFundG, corFundB, 0.0f);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-(ORTHO_WIDTH/2),(ORTHO_WIDTH/2),-(ORTHO_HEIGTH/2),(ORTHO_HEIGTH/2));
@@ -255,11 +264,9 @@ int main(int argc, char** argv)
 	glutInitWindowPosition(10,10);
 	glutCreateWindow(str);
 
-	glutDisplayFunc(desenhaCirculo);
-
-	//glutDisplayFunc 	( myDisplayFunc	);
+	glutDisplayFunc 	( myDisplayFunc	);
 	//glutMouseFunc   	( myMouseFunc   );
-	//glutMotionFunc  	( myMotionFunc  );
+	glutMotionFunc  	( myMotionFunc  );
 	glutKeyboardFunc	( myKeyboardFunc);
 	glutSpecialFunc		( mySpecialFunc	);
 	//glutReshapeFunc ( myReshapeFunc  );
