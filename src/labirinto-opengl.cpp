@@ -133,21 +133,27 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 
 //==== The Mouse Clicks Function =======================================//
 void myMouseFunc(int button, int state, int x, int y){
-
-
-}
-//======================================================================//
-void myMotionFunc(int x, int y){
 	//y^2 + x^2 = r^2
 	int xSRU = getXSRU(SRU, SRD,x);
 	int ySRU = getYSRU(SRU, SRD,y);
-	int d = (sqrt((xSRU-xc)*(xSRU-xc)+(ySRU-yc)*(ySRU-yc)));
-	if (d <= raio) {
-		corCircR = Random::get(0.0,1.0);
-		corCircG = Random::get(0.0,1.0);
-		corCircB = Random::get(0.0,1.0);
+	int paramCirculo = (sqrt((xSRU-xc)*(xSRU-xc)+(ySRU-yc)*(ySRU-yc)));
+
+	switch(button) {
+		case GLUT_LEFT_BUTTON:
+			if (paramCirculo <= raio) {	//	Identifica se a região do clique foi dentro do círculo
+					corCircR = Random::get(0.0,1.0);
+					corCircG = Random::get(0.0,1.0);
+					corCircB = Random::get(0.0,1.0);
+			}
+
+			break;
+		default:
+			break;
 	}
-	printf("m(%d, %d) c(%d, %d) -- d %d -- SRU(%d, %d)\n", x, y, xc, yc, d, xSRU, ySRU);
+	printf("m(%d, %d) c(%d, %d) -- d %d -- SRU(%d, %d)\n", x, y, xc, yc, paramCirculo, xSRU, ySRU);
+}
+//======================================================================//
+void myMotionFunc(int x, int y){
 
 }
 
@@ -203,6 +209,9 @@ void myReshapeFunc(int w, int h){
 	SRD[X_MAX] = w;
 	SRD[Y_MAX] = h;
 	printf("m(%d, %d)", w, h);
+	glutReshapeWindow(w, h);
+	glViewport(0,0, w, h);
+	glutPostRedisplay();
 }
 
 //======================================================================//
@@ -238,11 +247,11 @@ int main(int argc, char** argv)
 	glutCreateWindow(str);
 
 	glutDisplayFunc 	( myDisplayFunc	);
-	//glutMouseFunc   	( myMouseFunc   );
+	glutMouseFunc   	( myMouseFunc   );
 	glutMotionFunc  	( myMotionFunc  );
 	glutKeyboardFunc	( myKeyboardFunc);
 	glutSpecialFunc		( mySpecialFunc	);
-	//glutReshapeFunc ( myReshapeFunc  );
+	glutReshapeFunc 	( myReshapeFunc );
 
 	Inicializa();
 	glutMainLoop();
