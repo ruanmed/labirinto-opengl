@@ -40,9 +40,9 @@
 #define WINDOW_PROPORTION 0.5
 #define WINDOW_WIDTH (ORTHO_WIDTH*WINDOW_PROPORTION)
 #define WINDOW_HEIGTH (ORTHO_HEIGTH*WINDOW_PROPORTION)
-#define MAZE_STEP CIRCLE_RADIUS*2
-#define MESH_WIDTH_PARTS 128
-#define MESH_HEIGTH_PARTS 72
+#define MAZE_STEP (CIRCLE_RADIUS*6)
+#define MESH_WIDTH_PARTS ORTHO_WIDTH/MAZE_STEP
+#define MESH_HEIGTH_PARTS ORTHO_HEIGTH/MAZE_STEP
 #define MESH_WIDTH_PARTS_OPENNING_PROBABILITY 0.2
 #define MESH_HEIGHT_PARTS_OPENNING_PROBABILITY 0.5
 
@@ -76,7 +76,7 @@ bool isOnMap(int x,int y)
 {
 	return (-(ORTHO_WIDTH/2)*0.9 <= x && x <= (ORTHO_WIDTH/2)*0.9) && (-(ORTHO_HEIGTH/2)*0.9 <= y && y <= (ORTHO_HEIGTH/2)*0.9);
 }
-void generateRandomMaze(int initialCenterX,int initialCenterY)
+void generateRandomMaze()
 {
 	resetMazeMesh();
 
@@ -92,7 +92,29 @@ void generateRandomMaze(int initialCenterX,int initialCenterY)
 }
 void desenhaLabirinto(void)
 {
+		glColor3f(corLabiR, corLabiG, corLabiB);
 
+		glPointSize(2.0f);
+			glBegin(GL_LINES);
+
+				for(int l=0;l<MESH_WIDTH_PARTS;l++)
+						for(int c=0;c<MESH_HEIGTH_PARTS;c++)
+						{
+							if(!maze[l][c].top)
+							{
+								glVertex2f(-(ORTHO_WIDTH/2)+c*MAZE_STEP,-(ORTHO_HEIGTH/2)+l*MAZE_STEP);
+								glVertex2f(-(ORTHO_WIDTH/2)+(c+1)*MAZE_STEP,-(ORTHO_HEIGTH/2)+l*MAZE_STEP);
+							}
+							if(!maze[l][c].side)
+							{
+								glVertex2f(-(ORTHO_WIDTH/2)+c*MAZE_STEP,-(ORTHO_HEIGTH/2)+l*MAZE_STEP);
+								glVertex2f(-(ORTHO_WIDTH/2)+c*MAZE_STEP,-(ORTHO_HEIGTH/2)+(l+1)*MAZE_STEP);
+							}
+
+						}
+
+	    	glEnd();
+		glutSwapBuffers();
 }
 void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter parametros ou eu não sei como...
 {
@@ -105,27 +127,27 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 	glPointSize(2.0f); // aumenta o tamanho dos pontos
     	glBegin(GL_POINTS);
 
-   while(raio>0) {
+		   while(raio>0) {
 
-		for(theta = 0; theta <0.8;theta+=0.01)
-		{
+				for(theta = 0; theta <0.8;theta+=0.01)
+				{
 
-			x = (int)(raio*cos(theta));
-			y = (int)(raio*sin(theta));
+					x = (int)(raio*cos(theta));
+					y = (int)(raio*sin(theta));
 
-			glVertex2f(xc+(x),yc+(y));
-			glVertex2f(xc+(-x),yc+(y));
-			glVertex2f(xc+(-x),yc+(-y));
-			glVertex2f(xc+(x),yc+(-y));
-			glVertex2f(xc+(y),yc+(x));
-			glVertex2f(xc+(-y),yc+(x));
-			glVertex2f(xc+(-y),yc+(-x));
-			glVertex2f(xc+(y),yc+(-x));
+					glVertex2f(xc+(x),yc+(y));
+					glVertex2f(xc+(-x),yc+(y));
+					glVertex2f(xc+(-x),yc+(-y));
+					glVertex2f(xc+(x),yc+(-y));
+					glVertex2f(xc+(y),yc+(x));
+					glVertex2f(xc+(-y),yc+(x));
+					glVertex2f(xc+(-y),yc+(-x));
+					glVertex2f(xc+(y),yc+(-x));
 
-		}
-		raio -= 0.1;
-    }
-    raio = CIRCLE_RADIUS;
+				}
+				raio -= 0.1;
+			}
+			raio = CIRCLE_RADIUS;
 
     	glEnd();
 	glutSwapBuffers();
@@ -197,6 +219,7 @@ void mySpecialFunc(int key, int x, int y){
 void myDisplayFunc(){
 	glClearColor(corFundR, corFundG, corFundB, 0.0f);
 	desenhaCirculo();
+	desenhaLabirinto();
 }
 //======================================================================//
 void myReshapeFunc(int w, int h){
@@ -212,6 +235,7 @@ void Inicializa (void)
 {
 	corCircR = corCircG = corCircB = 1;
 	corFundR = corFundG = corFundB = fabs(1-corCircR);
+	corLabiR = corLabiG = corLabiB = 1;
 
 	SRD[X_MIN] = 0;
 	SRD[X_MAX] = WINDOW_WIDTH;
@@ -223,6 +247,7 @@ void Inicializa (void)
 	glLoadIdentity();
 	gluOrtho2D(-(ORTHO_WIDTH/2),(ORTHO_WIDTH/2),-(ORTHO_HEIGTH/2),(ORTHO_HEIGTH/2));
 	glMatrixMode(GL_MODELVIEW);
+	generateRandomMaze();
 }
 
 // Programa principal
@@ -232,7 +257,7 @@ int main(int argc, char** argv)
 	char str[50];
 	glutInit(&argc,argv);
 
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
  	glutInitWindowSize(WINDOW_WIDTH,WINDOW_HEIGTH);
 	glutInitWindowPosition(10,10);
 	glutCreateWindow(str);
