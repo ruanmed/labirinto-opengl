@@ -36,17 +36,18 @@
     #include <windows.h>
 #endif
 
-#define CIRCLE_RADIUS 15
+#define CIRCLE_RADIUS 5
 #define CIRCLE_POINT_SIZE 2.0f
 #define CIRCLE_CENTER_SPEED (1/4.0)
 #define CIRCLE_CENTER_DISPLACEMENT CIRCLE_CENTER_SPEED*MAZE_STEP
+#define CIRCLE_INITIAL_LIFE 4
 #define ORTHO_WIDTH 1920
 #define ORTHO_HEIGTH 1080
 #define WINDOW_PROPORTION 0.5
 #define WINDOW_WIDTH (ORTHO_WIDTH*WINDOW_PROPORTION)
 #define WINDOW_HEIGTH (ORTHO_HEIGTH*WINDOW_PROPORTION)
 #define MAZE_STEP (CIRCLE_RADIUS*6)
-#define MAZE_LINE_SIZE 6.0f
+#define MAZE_LINE_SIZE CIRCLE_RADIUS*(1.0/3.0)
 #define MESH_WIDTH_PARTS ORTHO_WIDTH/MAZE_STEP
 #define MESH_HEIGTH_PARTS ORTHO_HEIGTH/MAZE_STEP
 #define MESH_WIDTH_PARTS_OPENNING_PROBABILITY 0.6
@@ -63,6 +64,7 @@ typedef struct
 mesh maze[MESH_WIDTH_PARTS][MESH_HEIGTH_PARTS];
 int x,y;
 int xc = 0, yc = 0, xc0 = 0, yc0 = 0, raio = CIRCLE_RADIUS;
+int vidas = CIRCLE_INITIAL_LIFE;
 double corCircR,corCircG,corCircB;
 double corFundR,corFundG,corFundB;
 double corLabiR,corLabiG,corLabiB;
@@ -92,10 +94,10 @@ bool isOnMaze(int x,int y)
 	if( data ) {
 		glReadPixels(xSRD, glutGet( GLUT_WINDOW_HEIGHT ) -  ySRD, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, data);
 
-		printf("SRD( %d, %d)\n", xSRD, glutGet( GLUT_WINDOW_HEIGHT ) -ySRD);
-		printf("MAZE - rgb( %d, %d, %d)\nRGB( %d, %d, %d)\n",
-				data[0], data[1], data[2],
-					(int) (corLabiR*255.0), (int)(corLabiG*255.0), (int)(corLabiB*255.0));
+		//printf("SRD( %d, %d)\n", xSRD, glutGet( GLUT_WINDOW_HEIGHT ) -ySRD);
+		//printf("MAZE - rgb( %d, %d, %d)\nRGB( %d, %d, %d)\n",
+		//		data[0], data[1], data[2],
+		//			(int) (corLabiR*255.0), (int)(corLabiG*255.0), (int)(corLabiB*255.0));
 		if (	ceil(data[0]/25.5f) == ceil(corLabiR*10) &&
 				ceil(data[1]/25.5f) == ceil(corLabiG*10) &&
 				ceil(data[2]/25.5f) == ceil(corLabiB*10)
@@ -307,7 +309,6 @@ void myDisplayFunc(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClearColor(corFundR, corFundG, corFundB, 0.0f);
 	desenhaLabirinto();
-	glutSwapBuffers();
 	desenhaCirculo();
 	glutSwapBuffers();
 	//glutPostRedisplay();
@@ -330,7 +331,7 @@ void Inicializa (void)
 {
 	corCircR = corCircG = corCircB = 1;
 	corFundR = corFundG = corFundB = fabs(1-corCircR);
-	corLabiR = corLabiG = corLabiB = 0.9;
+	corLabiR = corLabiG = corLabiB = 0.5;
 
 
 	SRD[X_MIN] = 0;
