@@ -41,16 +41,19 @@
 #define CIRCLE_COLOR 1
 #define MAZE_COLOR 2
 #define BACK_COLOR 3
-#define CIRCLE_FLASH 4
+#define FLASH_COLOR 4
+
 #define GLUT_SPACEBAR_KEY 32
 #define GAME_OVER 0
 #define GAME_WELCOME 1
 #define GAME_START 2
 #define GAME_WIN 3
+#define GAME_NEWLEVEL 4
 
 int GAME_STATUS = 1;
 int GAME_LEVEL = 1;
 int CIRCLE_RADIUS = 5*GAME_LEVEL;
+bool CIRCLE_FLASH = false;
 double CIRCLE_RADIUS_DECREASE_TIME_CONSTANT = 30;
 double CIRCLE_POINT_SIZE = 2.0f;
 double CIRCLE_CENTER_SPEED = (1/4.0);
@@ -94,7 +97,7 @@ int SRD[4] = {0,0,0,0};
 char tituloJanela[50];
 
 void novaDificuldade(int nivel);
-void novaCor(int elemento); // CIRCLE_COLOR || MAZE_COLOR || BACK_COLOR || CIRCLE_FLASH
+void novaCor(int elemento); // CIRCLE_COLOR || MAZE_COLOR || BACK_COLOR || FLASH_COLOR
 
 //======================================================================//
 void atualizarJanela(){
@@ -187,6 +190,7 @@ void verificarVitoria()
 					isOnLimit(xc+(y),yc+(-x))
 					) {
 				novaDificuldade(GAME_LEVEL+10);
+				GAME_STATUS = GAME_NEWLEVEL;
 				break;
 			}
 		}
@@ -304,15 +308,15 @@ void desenhaMensagem(){
 void desenhaBoasVindas(){
 	// Posiciona o texto stroke usando transformações geométricas
 	glPushMatrix();
-	glTranslatef(-50,0,0);
-	glScalef(0.2, 0.2, 0.2); // diminui o tamanho do fonte
+	glTranslatef(ORTHO_LEFT*0.5,ORTHO_BOTTOM*0.2,0);
+	//glScalef(0.2, 0.2, 0.2); // diminui o tamanho do fonte
 	//glRotatef(15, 0,0,1); // rotaciona o texto
 	glLineWidth(2); // define a espessura da linha
 	desenhaTextoStroke(GLUT_STROKE_ROMAN,"Wastelands Maze");
 	glPopMatrix();
 
 	// Posição no universo onde o texto bitmap será colocado
-	glColor3f(0,0,1);
+	glColor3f(1,1,1);
 	//glScalef(1.0, 1.0, 1.0); // diminui o tamanho do fonte
 	//glRotatef(15, 0,0,1); // rotaciona o texto
 	int textoX =  ORTHO_LEFT*0.8, textoY = ORTHO_TOP*0.8;
@@ -331,18 +335,63 @@ void desenhaBoasVindas(){
 	glRasterPos2f(textoX,(textoY-=50));
 	desenhaTexto(GLUT_BITMAP_9_BY_15,"PRESSIONE BARRA DE ESPAÇOS PARA COMEÇAR");
 	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"A barra de espaços também funciona para fazer o círculo piscar.");
+	glRasterPos2f(textoX,(textoY-=50));
 	desenhaTexto(GLUT_BITMAP_9_BY_15,"BOA SORTE E BOM JOGO!");
 }
+void desenhaNovoNivel(){
+	char nivel[10];
+	sprintf(nivel, "%d", GAME_LEVEL);
+	glColor3f(1,1,1);
+	glPushMatrix();
+	glTranslatef(ORTHO_LEFT*0.5,ORTHO_TOP*0.3,0);
+	glLineWidth(2); // define a espessura da linha
+	desenhaTextoStroke(GLUT_STROKE_ROMAN,"Wastelands Maze");
+	glPopMatrix();
+
+	glColor3f(1,1,1);
+	int textoX =  ORTHO_LEFT*0.8, textoY = ORTHO_BOTTOM*0.1;
+	glRasterPos2f(textoX,textoY);
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"BEM VINDO AO NIVEL");
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15, nivel);
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"PRESSIONE BARRA DE ESPAÇOS PARA CONTINUAR NO LABIRINTO");
+}
 void desenhaFimDeJogo(){
+	char mensagem[50];
+
+	glColor3f(1,1,1);
+	glPushMatrix();
+	glTranslatef(ORTHO_LEFT*0.5,ORTHO_TOP*0.3,0);
+	glLineWidth(2); // define a espessura da linha
+	desenhaTextoStroke(GLUT_STROKE_ROMAN,"Wastelands Maze");
+	glPopMatrix();
+
+	glColor3f(1,1,1);
+	int textoX =  ORTHO_LEFT*0.8, textoY = ORTHO_BOTTOM*0.1;
+	glColor3f(1,0,0);
+	glRasterPos2f(textoX,textoY);
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"FIM DE JOGO");
+	glColor3f(1,1,1);
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"Uma pena! Tente jogar melhor da próxima vez!");
+	glRasterPos2f(textoX,(textoY-=50));
+	sprintf(mensagem, "Pelo menos tu chegou ao nível %d.", GAME_LEVEL);
+	desenhaTexto(GLUT_BITMAP_9_BY_15, mensagem);
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"PRESSIONE BARRA DE ESPAÇOS PARA REINICIAR O JOGO");
+}
+void desenhaParabens(){
 
 }
 //==== The Menu Functions ==============================================//
 void novaCor(int elemento){
 	switch (elemento) {
 		case CIRCLE_COLOR:
-			corCircR = Random::get(0.0,1.0);
-			corCircG = Random::get(0.0,1.0);
-			corCircB = Random::get(0.0,1.0);
+			corCircR = Random::get(0,255)/255.0;
+			corCircG = Random::get(0,255)/255.0;
+			corCircB = Random::get(0,255)/255.0;
 			break;
 		case MAZE_COLOR:
 			corLabiR = Random::get(0,255)/255.0;
@@ -361,10 +410,10 @@ void novaCor(int elemento){
 			corFundR = corFundG = corFundB = fabs(1-corCircR);
 			corLabiR = corLabiG = corLabiB = 0.8;
 			break;
-		case CIRCLE_FLASH:
-			corCircR = 1-corCircR;
-			corCircG = 1-corCircR;
-			corCircB = 1-corCircR;
+		case FLASH_COLOR:
+			corCircR = fabs(1.0-corCircR);
+			corCircG = fabs(1.0-corCircG);
+			corCircB = fabs(1.0-corCircB);
 			break;
 	}
 }
@@ -418,7 +467,7 @@ void menuCores(int op){
 			novaCor(RESET_COLOR);
 			break;
 		case 5: // 	Realçar círculo
-			novaCor(CIRCLE_FLASH);
+			CIRCLE_FLASH = !CIRCLE_FLASH;
 			break;
 	}
 	glutPostRedisplay();
@@ -495,7 +544,13 @@ void myMouseFunc(int button, int state, int x, int y){
 void myMotionFunc(int x, int y){
 
 }
-
+void piscarCirculo(int value) {
+	if (CIRCLE_FLASH) {
+		glutTimerFunc(200,piscarCirculo,1);
+		novaCor(FLASH_COLOR);
+		glutPostRedisplay();
+	}
+}
 //======================================================================//
 void myKeyboardFunc(unsigned char key, int x, int y) {
 	switch (key) {
@@ -514,10 +569,16 @@ void myKeyboardFunc(unsigned char key, int x, int y) {
 			yc--;
 			break;
 		case GLUT_SPACEBAR_KEY:
-			if (GAME_STATUS == GAME_WELCOME)
+			if (GAME_STATUS == GAME_WELCOME || GAME_STATUS == GAME_NEWLEVEL)
 				GAME_STATUS = GAME_START;
-			else if (GAME_STATUS == GAME_START)
-				novaCor(CIRCLE_FLASH);
+			else if (GAME_STATUS == GAME_START) {
+				CIRCLE_FLASH = !CIRCLE_FLASH;
+				glutTimerFunc(100,piscarCirculo,1);
+			}
+			else if (GAME_STATUS == GAME_OVER){
+				novaDificuldade(2);
+				GAME_STATUS = GAME_WELCOME;
+			}
 			break;
 		default:
 			break;
@@ -560,8 +621,11 @@ void myDisplayFunc(){
 		desenhaVidas();
 		desenhaCirculo();
 	}
+	else if (GAME_STATUS == GAME_NEWLEVEL){
+		desenhaNovoNivel();
+	}
 	else if (GAME_STATUS == GAME_WIN){
-		desenhaFimDeJogo();
+		desenhaParabens();
 	}
 	else if (GAME_STATUS == GAME_OVER){
 		desenhaFimDeJogo();
@@ -601,9 +665,9 @@ void novaDificuldade(int nivel) {
 	else
 		GAME_LEVEL = nivel;
 	// 	Definindo variáveis do jogo
-	GAME_STATUS = 1;
+	//GAME_STATUS = 1;
 	//CIRCLE_RADIUS = (50.0/ceil(log(nivel)));
-	CIRCLE_RADIUS = (50.0/ceil(exp(nivel/CIRCLE_RADIUS_DECREASE_TIME_CONSTANT)));
+	CIRCLE_RADIUS = (50.0/ceil(exp(GAME_LEVEL/CIRCLE_RADIUS_DECREASE_TIME_CONSTANT)));
 	CIRCLE_POINT_SIZE = 2.0f;
 	CIRCLE_CENTER_SPEED = (1/4.0);
 	CIRCLE_INITIAL_LIFE = 4;
