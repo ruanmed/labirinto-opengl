@@ -10,11 +10,11 @@
 // 		para compilar no linux: g++ labirinto-opengl.c -lglut -lGL -lGLU -lm
 //============================================================================
 /*
-[ ]	O objetivo é passar um objeto (circulo, triângulo ou retângulo) sem tocar nas paredes
+[x]	O objetivo é passar um objeto (circulo, triângulo ou retângulo) sem tocar nas paredes
 	do labirinto.
 [x]	Cada vez que ocorrer um toque na parede, o objeto volta para o início e o
 	jogador perde uma “vida”.
-[ ]	O jogo acaba quando ele atravessar sem tocar (vitória) ou bate 4 vezes em uma
+[-]	O jogo acaba quando ele atravessar sem tocar (vitória) ou bate 4 vezes em uma
 	parede (derrota).
 	Outras características:
 [x]	1 - O objeto deve estar preenchido com uma cor de escolha da dupla;
@@ -96,7 +96,7 @@ int SRU[4] = {ORTHO_LEFT,ORTHO_RIGHT,ORTHO_BOTTOM,ORTHO_TOP};
 int SRD[4] = {0,0,0,0};
 char tituloJanela[50];
 
-void novaDificuldade(int nivel);
+void novaDificuldade(int nivel, bool resetarCores);
 void novaCor(int elemento); // CIRCLE_COLOR || MAZE_COLOR || BACK_COLOR || FLASH_COLOR
 
 //======================================================================//
@@ -189,8 +189,9 @@ void verificarVitoria()
 					isOnLimit(xc+(-y),yc+(-x)) ||
 					isOnLimit(xc+(y),yc+(-x))
 					) {
-				novaDificuldade(GAME_LEVEL+10);
+				novaDificuldade(GAME_LEVEL+1,false);
 				GAME_STATUS = GAME_NEWLEVEL;
+				retornarInicio();
 				break;
 			}
 		}
@@ -297,18 +298,14 @@ void desenhaTexto(void *font, char *string) {	// Exibe caractere a caractere
 	while(*string)
 		glutBitmapCharacter(GLUT_BITMAP_9_BY_15,*string++);
 }
-void desenhaTextoStroke(void *font, char *string) {
-	// Exibe caractere a caractere
+void desenhaTextoStroke(void *font, char *string) {	// Exibe caractere a caractere
 	while(*string)
 		glutStrokeCharacter(GLUT_STROKE_ROMAN,*string++);
-}
-void desenhaMensagem(){
-
 }
 void desenhaBoasVindas(){
 	// Posiciona o texto stroke usando transformações geométricas
 	glPushMatrix();
-	glTranslatef(ORTHO_LEFT*0.5,ORTHO_BOTTOM*0.2,0);
+	glTranslatef(ORTHO_LEFT*0.5,ORTHO_BOTTOM*0.2-100,0);
 	//glScalef(0.2, 0.2, 0.2); // diminui o tamanho do fonte
 	//glRotatef(15, 0,0,1); // rotaciona o texto
 	glLineWidth(2); // define a espessura da linha
@@ -321,21 +318,27 @@ void desenhaBoasVindas(){
 	//glRotatef(15, 0,0,1); // rotaciona o texto
 	int textoX =  ORTHO_LEFT*0.8, textoY = ORTHO_TOP*0.8;
 	glRasterPos2f(textoX,textoY);
-	desenhaTexto(GLUT_BITMAP_9_BY_15,"Mova o círculo para fora do labirinto para subir de nível.");
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"Mova o círculo para fora do labirinto (sair pelas bordas) para subir de nível.");
 	glRasterPos2f(textoX,(textoY-=50));
-	desenhaTexto(GLUT_BITMAP_9_BY_15,"O círculo se move utilizando as setas do teclado.");
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"- MOVIMENTOS: Utilize as setas do teclado para mover o círculo.");
 	glRasterPos2f(textoX,(textoY-=50));
-	desenhaTexto(GLUT_BITMAP_9_BY_15,"Para mudar a cor de qualquer objeto (CÍRCULO, PAREDES DO LABIRINTO, FUNDO) basta clicar nele.");
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"- CORES: Para mudar a cor de qualquer objeto (CÍRCULO, PAREDES DO LABIRINTO, FUNDO) ");
 	glRasterPos2f(textoX,(textoY-=50));
-	desenhaTexto(GLUT_BITMAP_9_BY_15,"Se o círculo se mover em direção a qualquer parede do labirinto");
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"         basta clicar no objeto em questão.");
 	glRasterPos2f(textoX,(textoY-=50));
-	desenhaTexto(GLUT_BITMAP_9_BY_15,"então ele volta a posição inicial no labirinto e perde uma vida.");
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"- DESAFIO: Se o círculo se mover em direção a qualquer parede do labirinto");
 	glRasterPos2f(textoX,(textoY-=50));
-	desenhaTexto(GLUT_BITMAP_9_BY_15,"O jogo acaba quando suas vidas terminarem.");
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"           então ele volta a posição inicial no labirinto e perde uma vida.");
 	glRasterPos2f(textoX,(textoY-=50));
-	desenhaTexto(GLUT_BITMAP_9_BY_15,"PRESSIONE BARRA DE ESPAÇOS PARA COMEÇAR");
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"- FIM: O jogo acaba quando suas vidas terminarem.");
+	glColor3f(0,1,1);
 	glRasterPos2f(textoX,(textoY-=50));
-	desenhaTexto(GLUT_BITMAP_9_BY_15,"A barra de espaços também funciona para fazer o círculo piscar.");
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"                   PRESSIONE BARRA DE ESPAÇOS PARA COMEÇAR");
+	glColor3f(1,1,1);
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"- DICA: A barra de espaços também funciona para fazer o círculo piscar.");
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"- DICA 2: Ao subir de nível você fica novamente com 4 vidas.");
 	glRasterPos2f(textoX,(textoY-=50));
 	desenhaTexto(GLUT_BITMAP_9_BY_15,"BOA SORTE E BOM JOGO!");
 }
@@ -420,33 +423,37 @@ void novaCor(int elemento){
 void menuDificuldade(int op) {
 	switch (op){
 		case 1: // Aumentar nível
-			novaDificuldade(GAME_LEVEL+1);
+			novaDificuldade(GAME_LEVEL+1,false);
 			break;\
 		case 2: // Diminuir nível
-			novaDificuldade(GAME_LEVEL-1);
+			novaDificuldade(GAME_LEVEL-1,false);
 			break;
 		case 3: // Aumentar 10 níveis
-			novaDificuldade(GAME_LEVEL+10);
+			novaDificuldade(GAME_LEVEL+10,false);
 			break;
 		case 4: // Diminuir 10 níveis
-			novaDificuldade(GAME_LEVEL-10);
+			novaDificuldade(GAME_LEVEL-10,false);
 			break;
 	}
 	glutPostRedisplay();
 }
 void menuOpcoes(int op) {
 	switch (op){
-		case 1: // Reiniciar jogo (Volta ao nível 1)
-			novaDificuldade(2);
+		case 1: // 	Reiniciar jogo (volta ao nível 1)
+			novaDificuldade(1,true);
 			break;
-		case 2:	//	Resetar cores do jogo
-			novaCor(RESET_COLOR);
+		case 2: // 	Reiniciar jogo (volta à tela inicial)
+			novaDificuldade(1,true);
+			GAME_STATUS = GAME_WELCOME;
 			break;
-		case 3: //	Voltar ao início do level atual
+		case 3:	//	Resetar labirinto (continua no nível atual)
+			generateRandomMaze();
 			retornarInicio();
 			break;
-		case 4:	//	Resetar labirinto (continua no nível atual
-			generateRandomMaze();
+		case 4:	//	Resetar cores do jogo
+			novaCor(RESET_COLOR);
+			break;
+		case 5: //	Voltar ao início do level atual
 			retornarInicio();
 			break;
 	}
@@ -483,10 +490,11 @@ void exibirMenu() {
 		glutAddMenuEntry("[++] Aumentar 10 níveis",3);
 		glutAddMenuEntry("[--] Diminuir 10 níveis",4);
 	opcoes = glutCreateMenu(menuOpcoes);
-		glutAddMenuEntry("Reiniciar jogo (Volta ao nível 1)",1);
-		glutAddMenuEntry("Resetar cores",2);
-		glutAddMenuEntry("Voltar ao início do level atual",3);
-		glutAddMenuEntry("Resetar labirinto (continua no nível atual",4);
+		glutAddMenuEntry("Reiniciar jogo (volta ao nível 1)",1);
+		glutAddMenuEntry("Reiniciar jogo (volta à tela inicial)",2);
+		glutAddMenuEntry("Resetar labirinto (continua no nível atual",3);
+		glutAddMenuEntry("Resetar cores",4);
+		glutAddMenuEntry("Voltar ao início do level atual",5);
 	cores = glutCreateMenu(menuCores);
 		glutAddMenuEntry("Mudar cor do círculo",1);
 		glutAddMenuEntry("Mudar cor das paredes do labirinto",2);
@@ -556,18 +564,6 @@ void myKeyboardFunc(unsigned char key, int x, int y) {
 	switch (key) {
 		case 27:
 			exit(0);
-		case GLUT_KEY_LEFT:
-			xc--;
-			break;
-		case GLUT_KEY_UP:
-			yc++;
-			break;
-		case GLUT_KEY_RIGHT:
-			xc++;
-			break;
-		case GLUT_KEY_DOWN:
-			yc--;
-			break;
 		case GLUT_SPACEBAR_KEY:
 			if (GAME_STATUS == GAME_WELCOME || GAME_STATUS == GAME_NEWLEVEL)
 				GAME_STATUS = GAME_START;
@@ -576,7 +572,7 @@ void myKeyboardFunc(unsigned char key, int x, int y) {
 				glutTimerFunc(100,piscarCirculo,1);
 			}
 			else if (GAME_STATUS == GAME_OVER){
-				novaDificuldade(2);
+				novaDificuldade(1,true);
 				GAME_STATUS = GAME_WELCOME;
 			}
 			break;
@@ -587,25 +583,27 @@ void myKeyboardFunc(unsigned char key, int x, int y) {
 }
 //======================================================================//
 void mySpecialFunc(int key, int x, int y){
-	switch (key) {
-		case GLUT_KEY_LEFT:
-			xc -= CIRCLE_CENTER_DISPLACEMENT;
-			verificarStatus();
-			break;
-		case GLUT_KEY_UP:
-			yc += CIRCLE_CENTER_DISPLACEMENT;
-			verificarStatus();
-			break;
-		case GLUT_KEY_RIGHT:
-			xc += CIRCLE_CENTER_DISPLACEMENT;
-			verificarStatus();
-			break;
-		case GLUT_KEY_DOWN:
-			yc -= CIRCLE_CENTER_DISPLACEMENT;
-			verificarStatus();
-			break;
-		default:
-			break;
+	if (GAME_STATUS == GAME_START) {
+		switch (key) {
+			case GLUT_KEY_LEFT:
+				xc -= CIRCLE_CENTER_DISPLACEMENT;
+				verificarStatus();
+				break;
+			case GLUT_KEY_UP:
+				yc += CIRCLE_CENTER_DISPLACEMENT;
+				verificarStatus();
+				break;
+			case GLUT_KEY_RIGHT:
+				xc += CIRCLE_CENTER_DISPLACEMENT;
+				verificarStatus();
+				break;
+			case GLUT_KEY_DOWN:
+				yc -= CIRCLE_CENTER_DISPLACEMENT;
+				verificarStatus();
+				break;
+			default:
+				break;
+		}
 	}
 	glutPostRedisplay();
 }
@@ -659,9 +657,9 @@ void allocMaze(){
 		}
 	}
 }
-void novaDificuldade(int nivel) {
-	if (nivel <= 1)
-		GAME_LEVEL = 2;
+void novaDificuldade(int nivel, bool resetarCores) {
+	if (nivel < 1)
+		GAME_LEVEL = 1;
 	else
 		GAME_LEVEL = nivel;
 	// 	Definindo variáveis do jogo
@@ -693,7 +691,8 @@ void novaDificuldade(int nivel) {
 	//
 	raio = CIRCLE_RADIUS;
 	vidas = CIRCLE_INITIAL_LIFE;
-	novaCor(RESET_COLOR);
+	if (resetarCores)
+		novaCor(RESET_COLOR);
 
 	SRD[X_MIN] = 0;
 	SRD[X_MAX] = WINDOW_WIDTH;
@@ -706,7 +705,8 @@ void novaDificuldade(int nivel) {
 //	yc = yc0 = -(ORTHO_HEIGTH/2)+((ORTHO_HEIGTH/2/MAZE_STEP)*MAZE_STEP) + MAZE_STEP/2 ;
 //	xc = xc0 = -(ORTHO_WIDTH/2)+((ORTHO_WIDTH/MAZE_STEP/2)*MAZE_STEP) + MAZE_STEP/2;
 	yc = yc0 = ORTHO_BOTTOM+(MESH_HEIGTH_PARTS/2)*MAZE_STEP + MAZE_STEP/2 ;
-	xc = xc0 = ORTHO_LEFT+(MESH_WIDTH_PARTS/2)*MAZE_STEP + MAZE_STEP/2;//val*MAZE_STEP+MAZE_STEP*0.5+CIRCLE_RADIUS;
+	xc = xc0 = ORTHO_LEFT+(MESH_WIDTH_PARTS/2)*MAZE_STEP + MAZE_STEP/2;
+	//printf("W: %d H: %d\n",	MESH_WIDTH_PARTS, MESH_HEIGTH_PARTS);
 }
 // Inicializa parâmetros de rendering
 void Inicializa (void)
@@ -717,9 +717,8 @@ void Inicializa (void)
 	//gluOrtho2D(ORTHO_LEFT-50,ORTHO_RIGHT+50,ORTHO_BOTTOM-50,ORTHO_TOP+50);
 	gluOrtho2D(ORTHO_LEFT,ORTHO_RIGHT,ORTHO_BOTTOM,ORTHO_TOP);
 	glMatrixMode(GL_MODELVIEW);
-	novaDificuldade(2);
+	novaDificuldade(1,true);
 }
-
 
 // Programa principal
 
