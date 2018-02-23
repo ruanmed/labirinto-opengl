@@ -36,7 +36,10 @@
 #ifdef _WIN32
     #include <windows.h>
 #endif
-
+#define RESET_COLOR 0
+#define CIRCLE_COLOR 1
+#define MAZE_COLOR 2
+#define BACK_COLOR 3
 int GAME_STATUS = 1;
 int GAME_LEVEL = 1;
 int CIRCLE_RADIUS = 5*GAME_LEVEL;
@@ -58,7 +61,7 @@ double MAZE_LINE_SIZE = CIRCLE_RADIUS*(1.0/4.0);
 int MESH_WIDTH_PARTS = ORTHO_WIDTH/MAZE_STEP;
 int MESH_HEIGTH_PARTS = ORTHO_HEIGTH/MAZE_STEP;
 double MESH_WIDTH_PARTS_OPENNING_PROBABILITY = 0.5;
-double MESH_HEIGHT_PARTS_OPENNING_PROBABILITY =  0.7;
+double MESH_HEIGTH_PARTS_OPENNING_PROBABILITY =  0.7;
 
 using Random = effolkronium::random_static;
 typedef struct {
@@ -81,16 +84,25 @@ int SRU[4] = {ORTHO_LEFT,ORTHO_RIGHT,ORTHO_BOTTOM,ORTHO_TOP};
 int SRD[4] = {0,0,0,0};
 char tituloJanela[50];
 
+void novaDificuldade(int nivel);
+void novaCor(int elemento); // CIRCLE_COLOR || MAZE_COLOR || BACK_COLOR
+
+//======================================================================//
+void atualizarJanela(){
+	sprintf(tituloJanela, "Wastelands Maze by Ricardo e Ruan Medeiros - Vidas: %d - Nivel: %d", vidas, GAME_LEVEL);
+	glutSetWindowTitle(tituloJanela);
+}
+void retornarInicio() {	//	Retorna círculo para o início do labirinto
+	xc = xc0;
+	yc = yc0;
+}
+//======================================================================//
 void resetMazeMesh() {
 	for(int l=0;l<MESH_WIDTH_PARTS;l++)
 		for(int c=0;c<MESH_HEIGTH_PARTS;c++){
 			maze[l][c].side = 0;
 			maze[l][c].top = 0;
 		}
-}
-void retornarInicio() {	//	Retorna círculo para o início do labirinto
-	xc = xc0;
-	yc = yc0;
 }
 bool isOnMaze(int x,int y) {
 	int xSRD = getXSRD(SRU, SRD, x);
@@ -137,25 +149,23 @@ void verificarColisao(){
 				) {
 			retornarInicio();
 			vidas--;
+			break;
 		}
 	}
 	//raio = CIRCLE_RADIUS;
 }
 void generateRandomMaze()
 {
-	printf("\nhey our - %d\n", MESH_WIDTH_PARTS);
 	resetMazeMesh();
-	printf("\nhey our99\n");
 
 	for(int l=0;l<MESH_WIDTH_PARTS;l++)
 			for(int c=0;c<MESH_HEIGTH_PARTS;c++)
 			{
 				if(auto val = Random::get<bool>(MESH_WIDTH_PARTS_OPENNING_PROBABILITY))
 					maze[l][c].top = 1;
-				if(auto val = Random::get<bool>(MESH_HEIGHT_PARTS_OPENNING_PROBABILITY))
+				if(auto val = Random::get<bool>(MESH_HEIGTH_PARTS_OPENNING_PROBABILITY))
 					maze[l][c].side = 1;
 			}
-	printf("\nhey our999\n");
 }
 //======================================================================//
 void desenhaLabirinto(void)
@@ -221,8 +231,7 @@ void desenhaCirculo(void)//Infelizmente esta função de Call Back não pode ter
 }
 //======================================================================//
 void desenhaVidas(){
-	sprintf(tituloJanela, "Wastelands Maze by Ricardo e Ruan Medeiros - Vidas: %d", vidas);
-	glutSetWindowTitle(tituloJanela);
+	atualizarJanela();
 	if (vidas > 0) {
 		glColor3f(corVidaR, corVidaG, corVidaB);
 		glBegin(GL_QUADS);
@@ -248,6 +257,105 @@ void desenhaBoasVindas(){
 void desenhaFimDeJogo(){
 
 }
+//==== The Menu Functions ==============================================//
+void novaCor(int elemento){
+	switch (elemento) {
+		case CIRCLE_COLOR:
+			corCircR = Random::get(0.0,1.0);
+			corCircG = Random::get(0.0,1.0);
+			corCircB = Random::get(0.0,1.0);
+			break;
+		case MAZE_COLOR:
+			corLabiR = Random::get(0,255)/255.0;
+			corLabiG = Random::get(0,255)/255.0;
+			corLabiB = Random::get(0,255)/255.0;
+			break;
+		case BACK_COLOR:
+			corFundR = Random::get(0,255)/255.0;
+			corFundG = Random::get(0,255)/255.0;
+			corFundB = Random::get(0,255)/255.0;
+			break;
+		case RESET_COLOR:
+			corCircR = corCircG = corCircB = 1;
+			corVidaR = corVidaG = 0;
+			corVidaB = 1;
+			corFundR = corFundG = corFundB = fabs(1-corCircR);
+			corLabiR = corLabiG = corLabiB = 0.9;
+			break;
+	}
+}
+void menuDificuldade(int op) {
+	switch (op){
+		case 1: // Aumentar nível
+			novaDificuldade(GAME_LEVEL+1);
+			break;\
+		case 2: // Diminuir nível
+			novaDificuldade(GAME_LEVEL-1);
+			break;
+		case 3: // Aumentar 10 níveis
+			novaDificuldade(GAME_LEVEL+10);
+			break;
+		case 4: // Diminuir 10 níveis
+			novaDificuldade(GAME_LEVEL-10);
+			break;
+	}
+	glutPostRedisplay();
+}
+void menuOpcoes(int op) {
+	switch (op){
+		case 1: // Reiniciar jogo
+			retornarInicio();
+			break;
+		case 2:	//	Resetar cores do jogo
+			novaCor(RESET_COLOR);
+			break;
+	}
+	glutPostRedisplay();
+}
+void menuCores(int op){
+	switch (op){
+		case 1: // Mudar cor do círculo
+			novaCor(CIRCLE_COLOR);
+			break;
+		case 2:	//	Mudar cor das paredes do labirinto
+			novaCor(MAZE_COLOR);
+			break;
+		case 3: // 	Mudar cor do fundo
+			novaCor(BACK_COLOR);
+			break;
+		case 4: //	Resetar cores
+			novaCor(RESET_COLOR);
+			break;
+	}
+	glutPostRedisplay();
+}
+void menuPrincipal(int op){
+
+}
+void exibirMenu() {
+	int menu, dificuldade, opcoes, cores;
+	dificuldade = glutCreateMenu(menuDificuldade);
+		glutAddMenuEntry("[+] Aumentar nível",1);
+		glutAddMenuEntry("[-] Diminuir nível",2);
+		glutAddMenuEntry("[++] Aumentar 10 níveis",3);
+		glutAddMenuEntry("[--] Diminuir 10 níveis",4);
+	opcoes = glutCreateMenu(menuOpcoes);
+		glutAddMenuEntry("Reiniciar jogo",1);
+		glutAddMenuEntry("Resetar cores",2);
+	cores = glutCreateMenu(menuCores);
+		glutAddMenuEntry("Mudar cor do círculo",1);
+		glutAddMenuEntry("Mudar cor das paredes do labirinto",2);
+		glutAddMenuEntry("Mudar cor do fundo",3);
+		glutAddMenuEntry("Resetar cores",4);
+	menu = glutCreateMenu(menuPrincipal);
+		glutAddSubMenu("Dificuldade",dificuldade);
+		glutAddSubMenu("Opções",opcoes);
+		glutAddSubMenu("Cores",cores);
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
+}
+
+//======================================================================//
+
 //==== The Mouse Clicks Function =======================================//
 void myMouseFunc(int button, int state, int x, int y){
 	//y^2 + x^2 = r^2
@@ -261,27 +369,22 @@ void myMouseFunc(int button, int state, int x, int y){
 	}
 	switch(button) {
 		case GLUT_LEFT_BUTTON:
-			if (paramCirculo <= raio) {	//	Identifica se a região do clique foi dentro do círculo
-					corCircR = Random::get(0.0,1.0);
-					corCircG = Random::get(0.0,1.0);
-					corCircB = Random::get(0.0,1.0);
-			}
+			if (paramCirculo <= raio)	//	Identifica se a região do clique foi dentro do círculo
+				novaCor(CIRCLE_COLOR);
 			else if (ceil(data[0]/25.5f) == ceil(corLabiR*10) &&
 					ceil(data[1]/25.5f) == ceil(corLabiG*10) &&
 					ceil(data[2]/25.5f) == ceil(corLabiB*10)
-					) {
-				corLabiR = Random::get(0,255)/255.0;
-				corLabiG = Random::get(0,255)/255.0;
-				corLabiB = Random::get(0,255)/255.0;
-			}
+					)
+				novaCor(MAZE_COLOR);
 			else if (ceil(data[0]/25.5f) == ceil(corFundR*10) &&
 					ceil(data[1]/25.5f) == ceil(corFundG*10) &&
 					ceil(data[2]/25.5f) == ceil(corFundB*10)
 					) {
-				corFundR = Random::get(0,255)/255.0;
-				corFundG = Random::get(0,255)/255.0;
-				corFundB = Random::get(0,255)/255.0;
+				novaCor(BACK_COLOR);
 			}
+			break;
+		case GLUT_RIGHT_BUTTON:
+			exibirMenu();
 			break;
 		default:
 			break;
@@ -385,9 +488,13 @@ void allocMaze(){
 	}
 }
 void novaDificuldade(int nivel) {
+	if (nivel <= 1)
+		GAME_LEVEL = 2;
+	else
+		GAME_LEVEL = nivel;
+	// 	Definindo variáveis do jogo
 	GAME_STATUS = 1;
-	GAME_LEVEL = log(nivel);
-	CIRCLE_RADIUS = (50.0/GAME_LEVEL);
+	CIRCLE_RADIUS = (50.0/ceil(log(nivel)));
 	CIRCLE_POINT_SIZE = 2.0f;
 	CIRCLE_CENTER_SPEED = (1/4.0);
 
@@ -409,38 +516,36 @@ void novaDificuldade(int nivel) {
 	MESH_WIDTH_PARTS = ORTHO_WIDTH/MAZE_STEP;
 	MESH_HEIGTH_PARTS = ORTHO_HEIGTH/MAZE_STEP;
 	MESH_WIDTH_PARTS_OPENNING_PROBABILITY = 0.5;
-	MESH_HEIGHT_PARTS_OPENNING_PROBABILITY =  0.7;
+	MESH_HEIGTH_PARTS_OPENNING_PROBABILITY =  0.7;
 
-	generateRandomMaze();
-	auto val = Random::get(-MESH_WIDTH_PARTS/2,MESH_WIDTH_PARTS/2);
-	yc = yc0 = SRU[Y_MIN]+3*CIRCLE_RADIUS;
-	xc = xc0 = val*MAZE_STEP+MAZE_STEP*0.75;
-}
-// Inicializa parâmetros de rendering
-void Inicializa (void)
-{
-	allocMaze();
-	corCircR = corCircG = corCircB = 1;
-	corVidaR = corVidaG = 0;
-	corVidaB = 1;
-	corFundR = corFundG = corFundB = fabs(1-corCircR);
-	corLabiR = corLabiG = corLabiB = 0.9;
-
+	//
+	raio = CIRCLE_RADIUS;
+	vidas = CIRCLE_INITIAL_LIFE;
+	novaCor(RESET_COLOR);
 
 	SRD[X_MIN] = 0;
 	SRD[X_MAX] = WINDOW_WIDTH;
 	SRD[Y_MIN] = 0;
 	SRD[Y_MAX] = WINDOW_HEIGTH;
+
+	allocMaze();
+	generateRandomMaze();
+//	auto val = Random::get(-MESH_WIDTH_PARTS/6,MESH_WIDTH_PARTS/6);
+//	yc = yc0 = -(ORTHO_HEIGTH/2)+((ORTHO_HEIGTH/2/MAZE_STEP)*MAZE_STEP) + MAZE_STEP/2 ;
+//	xc = xc0 = -(ORTHO_WIDTH/2)+((ORTHO_WIDTH/MAZE_STEP/2)*MAZE_STEP) + MAZE_STEP/2;
+	yc = yc0 = ORTHO_BOTTOM+(MESH_HEIGTH_PARTS/2)*MAZE_STEP + MAZE_STEP/2 ;
+	xc = xc0 = ORTHO_LEFT+(MESH_WIDTH_PARTS/2)*MAZE_STEP + MAZE_STEP/2;//val*MAZE_STEP+MAZE_STEP*0.5+CIRCLE_RADIUS;
+}
+// Inicializa parâmetros de rendering
+void Inicializa (void)
+{
 	glClearColor(corFundR, corFundG, corFundB, 0.0f);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	//gluOrtho2D(ORTHO_LEFT-50,ORTHO_RIGHT+50,ORTHO_BOTTOM-50,ORTHO_TOP+50);
 	gluOrtho2D(ORTHO_LEFT,ORTHO_RIGHT,ORTHO_BOTTOM,ORTHO_TOP);
 	glMatrixMode(GL_MODELVIEW);
-	generateRandomMaze();
-	auto val = Random::get(-MESH_WIDTH_PARTS/2,MESH_WIDTH_PARTS/2);
-	yc = yc0 = SRU[Y_MIN]+3*CIRCLE_RADIUS;
-	xc = xc0 = val*MAZE_STEP+MAZE_STEP*0.75;
+	novaDificuldade(2);
 }
 
 
@@ -458,6 +563,7 @@ int main(int argc, char** argv)
 	sprintf(tituloJanela, "Wastelands Maze by Ricardo e Ruan Medeiros - Vidas: %d", vidas);
 	glutCreateWindow(tituloJanela);
 
+	Inicializa();
 	glutDisplayFunc 	( myDisplayFunc	);
 	glutMouseFunc   	( myMouseFunc   );
 	glutMotionFunc  	( myMotionFunc  );
@@ -465,7 +571,7 @@ int main(int argc, char** argv)
 	glutSpecialFunc		( mySpecialFunc	);
 	glutReshapeFunc 	( myReshapeFunc );
 
-	Inicializa();
+
 	glutMainLoop();
 
 	return 0;
