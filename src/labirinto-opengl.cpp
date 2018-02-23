@@ -43,6 +43,7 @@
 int GAME_STATUS = 1;
 int GAME_LEVEL = 1;
 int CIRCLE_RADIUS = 5*GAME_LEVEL;
+double CIRCLE_RADIUS_DECREASE_TIME_CONSTANT = 30;
 double CIRCLE_POINT_SIZE = 2.0f;
 double CIRCLE_CENTER_SPEED = (1/4.0);
 int CIRCLE_INITIAL_LIFE = 4;
@@ -131,6 +132,12 @@ bool isOnMaze(int x,int y) {
 		return false;
 	}
 }
+bool isOnLimit(int x,int y)
+{	if(x <= ORTHO_LEFT || x >= ORTHO_RIGHT || y<= ORTHO_BOTTOM || y >= ORTHO_TOP)
+		return true;
+	else
+		return false;
+}
 void verificarColisao(){
 	double theta;
 	for(theta = 0; theta <0.8;theta+=0.01) {
@@ -153,6 +160,33 @@ void verificarColisao(){
 		}
 	}
 	//raio = CIRCLE_RADIUS;
+}
+void verificarVitoria()
+{
+	double theta;
+		for(theta = 0; theta <0.8;theta+=0.01) {
+			x = (int)(raio*cos(theta));
+			y = (int)(raio*sin(theta));
+
+			//	Verifica se bateu nas paredes da viewport
+			if (	isOnLimit(xc+(x),yc+(y)) ||
+					isOnLimit(xc+(-x),yc+(y)) ||
+					isOnLimit(xc+(-x),yc+(-y)) ||
+					isOnLimit(xc+(x),yc+(-y)) ||
+					isOnLimit(xc+(y),yc+(x)) ||
+					isOnLimit(xc+(-y),yc+(x)) ||
+					isOnLimit(xc+(-y),yc+(-x)) ||
+					isOnLimit(xc+(y),yc+(-x))
+					) {
+				novaDificuldade(GAME_LEVEL+10);
+				break;
+			}
+		}
+}
+void verificarStatus()
+{
+	verificarColisao();
+	verificarVitoria();
 }
 void generateRandomMaze()
 {
@@ -427,19 +461,19 @@ void mySpecialFunc(int key, int x, int y){
 	switch (key) {
 		case GLUT_KEY_LEFT:
 			xc -= CIRCLE_CENTER_DISPLACEMENT;
-			verificarColisao();
+			verificarStatus();
 			break;
 		case GLUT_KEY_UP:
 			yc += CIRCLE_CENTER_DISPLACEMENT;
-			verificarColisao();
+			verificarStatus();
 			break;
 		case GLUT_KEY_RIGHT:
 			xc += CIRCLE_CENTER_DISPLACEMENT;
-			verificarColisao();
+			verificarStatus();
 			break;
 		case GLUT_KEY_DOWN:
 			yc -= CIRCLE_CENTER_DISPLACEMENT;
-			verificarColisao();
+			verificarStatus();
 			break;
 		default:
 			break;
@@ -494,10 +528,10 @@ void novaDificuldade(int nivel) {
 		GAME_LEVEL = nivel;
 	// 	Definindo variáveis do jogo
 	GAME_STATUS = 1;
-	CIRCLE_RADIUS = (50.0/ceil(log(nivel)));
+	//CIRCLE_RADIUS = (50.0/ceil(log(nivel)));
+	CIRCLE_RADIUS = (50.0/ceil(exp(nivel/CIRCLE_RADIUS_DECREASE_TIME_CONSTANT)));
 	CIRCLE_POINT_SIZE = 2.0f;
 	CIRCLE_CENTER_SPEED = (1/4.0);
-
 	CIRCLE_INITIAL_LIFE = 4;
 
 	//ORTHO_WIDTH = 1920;
