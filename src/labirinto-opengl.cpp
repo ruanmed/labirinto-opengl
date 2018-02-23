@@ -32,6 +32,7 @@
 #include <string.h>
 #include <effolkronium/random.hpp>
 #include <conversorSR.hpp>
+#include <locale.h>
 #include <vector>
 #ifdef _WIN32
     #include <windows.h>
@@ -40,6 +41,13 @@
 #define CIRCLE_COLOR 1
 #define MAZE_COLOR 2
 #define BACK_COLOR 3
+#define CIRCLE_FLASH 4
+#define GLUT_SPACEBAR_KEY 32
+#define GAME_OVER 0
+#define GAME_WELCOME 1
+#define GAME_START 2
+#define GAME_WIN 3
+
 int GAME_STATUS = 1;
 int GAME_LEVEL = 1;
 int CIRCLE_RADIUS = 5*GAME_LEVEL;
@@ -48,10 +56,10 @@ double CIRCLE_CENTER_SPEED = (1/4.0);
 int CIRCLE_INITIAL_LIFE = 4;
 int ORTHO_WIDTH = 1920;
 int ORTHO_HEIGTH = 1080;
-double ORTHO_LEFT = -(ORTHO_WIDTH/2);
-double ORTHO_RIGHT = (ORTHO_WIDTH/2);
-double ORTHO_BOTTOM  = -(ORTHO_HEIGTH/2);
-double ORTHO_TOP = (ORTHO_HEIGTH/2);
+int ORTHO_LEFT = -(ORTHO_WIDTH/2);
+int ORTHO_RIGHT = (ORTHO_WIDTH/2);
+int ORTHO_BOTTOM  = -(ORTHO_HEIGTH/2);
+int ORTHO_TOP = (ORTHO_HEIGTH/2);
 double WINDOW_PROPORTION = 0.5;
 double WINDOW_WIDTH = (ORTHO_WIDTH*WINDOW_PROPORTION);
 double WINDOW_HEIGTH = (ORTHO_HEIGTH*WINDOW_PROPORTION);
@@ -85,7 +93,7 @@ int SRD[4] = {0,0,0,0};
 char tituloJanela[50];
 
 void novaDificuldade(int nivel);
-void novaCor(int elemento); // CIRCLE_COLOR || MAZE_COLOR || BACK_COLOR
+void novaCor(int elemento); // CIRCLE_COLOR || MAZE_COLOR || BACK_COLOR || CIRCLE_FLASH
 
 //======================================================================//
 void atualizarJanela(){
@@ -244,15 +252,52 @@ void desenhaVidas(){
 		glEnd();
 	}
 	else {
-		GAME_STATUS = 0;
+		GAME_STATUS = GAME_OVER;
 	}
 }
-
+void desenhaTexto(void *font, char *string) {	// Exibe caractere a caractere
+	while(*string)
+		glutBitmapCharacter(GLUT_BITMAP_9_BY_15,*string++);
+}
+void desenhaTextoStroke(void *font, char *string) {
+	// Exibe caractere a caractere
+	while(*string)
+		glutStrokeCharacter(GLUT_STROKE_ROMAN,*string++);
+}
 void desenhaMensagem(){
 
 }
 void desenhaBoasVindas(){
+	// Posiciona o texto stroke usando transformações geométricas
+	glPushMatrix();
+	glTranslatef(-50,0,0);
+	glScalef(0.2, 0.2, 0.2); // diminui o tamanho do fonte
+	//glRotatef(15, 0,0,1); // rotaciona o texto
+	glLineWidth(2); // define a espessura da linha
+	desenhaTextoStroke(GLUT_STROKE_ROMAN,"Wastelands Maze");
+	glPopMatrix();
 
+	// Posição no universo onde o texto bitmap será colocado
+	glColor3f(0,0,1);
+	//glScalef(1.0, 1.0, 1.0); // diminui o tamanho do fonte
+	//glRotatef(15, 0,0,1); // rotaciona o texto
+	int textoX =  ORTHO_LEFT*0.8, textoY = ORTHO_TOP*0.8;
+	glRasterPos2f(textoX,textoY);
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"Mova o círculo para fora do labirinto para subir de nível.");
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"O círculo se move utilizando as setas do teclado.");
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"Para mudar a cor de qualquer objeto (CÍRCULO, PAREDES DO LABIRINTO, FUNDO) basta clicar nele.");
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"Se o círculo se mover em direção a qualquer parede do labirinto");
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"então ele volta a posição inicial no labirinto e perde uma vida.");
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"O jogo acaba quando suas vidas terminarem.");
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"PRESSIONE BARRA DE ESPAÇOS PARA COMEÇAR");
+	glRasterPos2f(textoX,(textoY-=50));
+	desenhaTexto(GLUT_BITMAP_9_BY_15,"BOA SORTE E BOM JOGO!");
 }
 void desenhaFimDeJogo(){
 
@@ -276,11 +321,16 @@ void novaCor(int elemento){
 			corFundB = Random::get(0,255)/255.0;
 			break;
 		case RESET_COLOR:
-			corCircR = corCircG = corCircB = 1;
+			corCircR = corCircG = corCircB = 0.9;
 			corVidaR = corVidaG = 0;
 			corVidaB = 1;
 			corFundR = corFundG = corFundB = fabs(1-corCircR);
-			corLabiR = corLabiG = corLabiB = 0.9;
+			corLabiR = corLabiG = corLabiB = 0.8;
+			break;
+		case CIRCLE_FLASH:
+			corCircR = 1-corCircR;
+			corCircG = 1-corCircR;
+			corCircB = 1-corCircR;
 			break;
 	}
 }
@@ -303,11 +353,18 @@ void menuDificuldade(int op) {
 }
 void menuOpcoes(int op) {
 	switch (op){
-		case 1: // Reiniciar jogo
-			retornarInicio();
+		case 1: // Reiniciar jogo (Volta ao nível 1)
+			novaDificuldade(2);
 			break;
 		case 2:	//	Resetar cores do jogo
 			novaCor(RESET_COLOR);
+			break;
+		case 3: //	Voltar ao início do level atual
+			retornarInicio();
+			break;
+		case 4:	//	Resetar labirinto (continua no nível atual
+			generateRandomMaze();
+			retornarInicio();
 			break;
 	}
 	glutPostRedisplay();
@@ -326,6 +383,9 @@ void menuCores(int op){
 		case 4: //	Resetar cores
 			novaCor(RESET_COLOR);
 			break;
+		case 5: // 	Realçar círculo
+			novaCor(CIRCLE_FLASH);
+			break;
 	}
 	glutPostRedisplay();
 }
@@ -340,8 +400,10 @@ void exibirMenu() {
 		glutAddMenuEntry("[++] Aumentar 10 níveis",3);
 		glutAddMenuEntry("[--] Diminuir 10 níveis",4);
 	opcoes = glutCreateMenu(menuOpcoes);
-		glutAddMenuEntry("Reiniciar jogo",1);
+		glutAddMenuEntry("Reiniciar jogo (Volta ao nível 1)",1);
 		glutAddMenuEntry("Resetar cores",2);
+		glutAddMenuEntry("Voltar ao início do level atual",3);
+		glutAddMenuEntry("Resetar labirinto (continua no nível atual",4);
 	cores = glutCreateMenu(menuCores);
 		glutAddMenuEntry("Mudar cor do círculo",1);
 		glutAddMenuEntry("Mudar cor das paredes do labirinto",2);
@@ -417,6 +479,12 @@ void myKeyboardFunc(unsigned char key, int x, int y) {
 		case GLUT_KEY_DOWN:
 			yc--;
 			break;
+		case GLUT_SPACEBAR_KEY:
+			if (GAME_STATUS == GAME_WELCOME)
+				GAME_STATUS = GAME_START;
+			else if (GAME_STATUS == GAME_START)
+				novaCor(CIRCLE_FLASH);
+			break;
 		default:
 			break;
 	}
@@ -450,13 +518,19 @@ void mySpecialFunc(int key, int x, int y){
 void myDisplayFunc(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClearColor(corFundR, corFundG, corFundB, 0.0f);
-	if (GAME_STATUS == 1) {
+	if (GAME_STATUS == GAME_WELCOME) {
+		desenhaBoasVindas();
+	}
+	else if (GAME_STATUS == GAME_START) {
 		desenhaLabirinto();
 		desenhaVidas();
 		desenhaCirculo();
 	}
-	else {
-		desenhaMensagem();
+	else if (GAME_STATUS == GAME_WIN){
+		desenhaFimDeJogo();
+	}
+	else if (GAME_STATUS == GAME_OVER){
+		desenhaFimDeJogo();
 	}
 	glutSwapBuffers();
 	//glutPostRedisplay();
@@ -553,6 +627,7 @@ void Inicializa (void)
 
 int main(int argc, char** argv)
 {
+	printf ("Localidade corrente é: %s\n", setlocale(LC_ALL,"") );
 	//char str[50];// = "Wastelands Maze by Ricardo e Ruan Medeiros";
 	glutInit(&argc,argv);
 
