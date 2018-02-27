@@ -72,8 +72,10 @@ double CIRCLE_CENTER_DISPLACEMENT = CIRCLE_CENTER_SPEED*MAZE_STEP;
 double MAZE_LINE_SIZE = CIRCLE_RADIUS*(1.0/4.0);
 int MESH_WIDTH_PARTS = ORTHO_WIDTH/MAZE_STEP;
 int MESH_HEIGTH_PARTS = ORTHO_HEIGTH/MAZE_STEP;
-double MESH_WIDTH_PARTS_OPENNING_PROBABILITY = 0.5;
-double MESH_HEIGTH_PARTS_OPENNING_PROBABILITY =  0.7;
+double MESH_WIDTH_PARTS_INITAL_OPENNING_PROBABILITY = 0.5;
+double MESH_HEIGTH_PARTS_INITAL_OPENNING_PROBABILITY =  0.7;
+double MESH_WIDTH_PARTS_CURRENT_OPENNING_PROBABILITY = 0;
+double MESH_HEIGTH_PARTS_CURRENT_OPENNING_PROBABILITY =  0;
 double MESH_PARTS_OPPENING_DECREASE_TIME_CONSTANT = 600;
 
 using Random = effolkronium::random_static;
@@ -209,9 +211,9 @@ void generateRandomMaze()
 	for(int l=0;l<MESH_WIDTH_PARTS;l++)
 			for(int c=0;c<MESH_HEIGTH_PARTS;c++)
 			{
-				if(auto val = Random::get<bool>(MESH_WIDTH_PARTS_OPENNING_PROBABILITY))
+				if(auto val = Random::get<bool>(MESH_WIDTH_PARTS_CURRENT_OPENNING_PROBABILITY))
 					maze[l][c].top = 1;
-				if(auto val = Random::get<bool>(MESH_HEIGTH_PARTS_OPENNING_PROBABILITY))
+				if(auto val = Random::get<bool>(MESH_HEIGTH_PARTS_CURRENT_OPENNING_PROBABILITY))
 					maze[l][c].side = 1;
 			}
 }
@@ -644,6 +646,18 @@ void myReshapeFunc(int w, int h){
 }
 
 //======================================================================//
+void freeMaze()
+{
+	if(maze)
+	{
+		for (int c = 0; c < MESH_HEIGTH_PARTS; c++)
+		{
+			free(maze[c]);
+		}
+		free(maze);
+	}
+
+}
 void allocMaze(){
 	maze = (mesh **) malloc(sizeof(mesh*) * MESH_WIDTH_PARTS  );
 	if (!maze) {
@@ -666,7 +680,7 @@ void novaDificuldade(int nivel, bool resetarCores) {
 	// 	Definindo variáveis do jogo
 	//GAME_STATUS = 1;
 	//CIRCLE_RADIUS = (50.0/ceil(log(nivel)));
-	CIRCLE_RADIUS = (50.0/ceil(exp(GAME_LEVEL/CIRCLE_RADIUS_DECREASE_TIME_CONSTANT)));
+	CIRCLE_RADIUS = (50.0/exp(GAME_LEVEL/CIRCLE_RADIUS_DECREASE_TIME_CONSTANT));
 	CIRCLE_POINT_SIZE = 2.0f;
 	CIRCLE_CENTER_SPEED = (1/4.0);
 	CIRCLE_INITIAL_LIFE = 4;
@@ -686,8 +700,8 @@ void novaDificuldade(int nivel, bool resetarCores) {
 	MAZE_LINE_SIZE = CIRCLE_RADIUS*(1.0/4.0);
 	MESH_WIDTH_PARTS = ORTHO_WIDTH/MAZE_STEP;
 	MESH_HEIGTH_PARTS = ORTHO_HEIGTH/MAZE_STEP;
-	MESH_WIDTH_PARTS_OPENNING_PROBABILITY = 0.5/exp(GAME_LEVEL/MESH_PARTS_OPPENING_DECREASE_TIME_CONSTANT);
-	MESH_HEIGTH_PARTS_OPENNING_PROBABILITY =  0.7/exp(GAME_LEVEL/MESH_PARTS_OPPENING_DECREASE_TIME_CONSTANT);
+	MESH_WIDTH_PARTS_CURRENT_OPENNING_PROBABILITY = MESH_WIDTH_PARTS_INITAL_OPENNING_PROBABILITY/exp(GAME_LEVEL/MESH_PARTS_OPPENING_DECREASE_TIME_CONSTANT);
+	MESH_HEIGTH_PARTS_CURRENT_OPENNING_PROBABILITY =  MESH_HEIGTH_PARTS_INITAL_OPENNING_PROBABILITY/exp(GAME_LEVEL/MESH_PARTS_OPPENING_DECREASE_TIME_CONSTANT);
 
 	//
 	raio = CIRCLE_RADIUS;
@@ -700,6 +714,7 @@ void novaDificuldade(int nivel, bool resetarCores) {
 	SRD[Y_MIN] = 0;
 	SRD[Y_MAX] = WINDOW_HEIGTH;
 
+	freeMaze();
 	allocMaze();
 	generateRandomMaze();
 //	auto val = Random::get(-MESH_WIDTH_PARTS/6,MESH_WIDTH_PARTS/6);
